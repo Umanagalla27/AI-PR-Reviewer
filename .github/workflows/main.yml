@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+          
+    env:
+      REDIS_URL: redis://localhost:6379/0
+      CELERY_BROKER_URL: redis://localhost:6379/1
+      CELERY_RESULT_BACKEND: redis://localhost:6379/2
+      DATABASE_URL: sqlite+aiosqlite:///:memory:
+      OPENAI_API_KEY: sk-test-key
+      GITHUB_APP_ID: 12345
+      GITHUB_APP_PRIVATE_KEY: test-key
+      GITHUB_WEBHOOK_SECRET: test-secret
+      WEBHOOK_SERVICE_URL: http://localhost:8001
+      ORCHESTRATOR_URL: http://localhost:8002
+      REVIEWER_URL: http://localhost:8003
+      LEARNER_URL: http://localhost:8004
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+        cache: 'pip'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[dev]"
+        
+    - name: Run Pytest
+      run: |
+        pytest --cov=. --cov-report=xml
+        
+    - name: Run mypy
+      run: |
+        mypy shared agents services workers
+        
+    - name: Run Ruff (linting)
+      run: |
+        ruff check .
+        
+    - name: Run Ruff (formatting)
+      run: |
+        ruff format --check .

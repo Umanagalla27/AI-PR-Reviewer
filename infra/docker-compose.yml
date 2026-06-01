@@ -1,0 +1,139 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: codereview
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  gateway:
+    build: 
+      context: ../
+      dockerfile: infra/Dockerfile
+      target: runner
+    command: ["uvicorn", "services.gateway.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../.env
+    depends_on:
+      - webhook
+
+  webhook:
+    build: 
+      context: ../
+      dockerfile: infra/Dockerfile
+    command: ["uvicorn", "services.webhook.main:app", "--host", "0.0.0.0", "--port", "8001"]
+    ports:
+      - "8001:8001"
+    env_file:
+      - ../.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  orchestrator:
+    build: 
+      context: ../
+      dockerfile: infra/Dockerfile
+    command: ["uvicorn", "services.orchestrator.main:app", "--host", "0.0.0.0", "--port", "8002"]
+    ports:
+      - "8002:8002"
+    env_file:
+      - ../.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  reviewer:
+    build: 
+      context: ../
+      dockerfile: infra/Dockerfile
+    command: ["uvicorn", "services.reviewer.main:app", "--host", "0.0.0.0", "--port", "8003"]
+    ports:
+      - "8003:8003"
+    env_file:
+      - ../.env
+
+  learner:
+    build: 
+      context: ../
+      dockerfile: infra/Dockerfile
+    command: ["uvicorn", "services.learner.main:app", "--host", "0.0.0.0", "--port", "8004"]
+    ports:
+      - "8004:8004"
+    env_file:
+      - ../.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  celery_worker:
+    build: 
+      context: ../
+      dockerfile: infra/Dockerfile
+    command: ["celery", "-A", "workers.celery_app", "worker", "--loglevel=info"]
+    env_file:
+      - ../.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      orchestrator:
+        condition: service_started
+      learner:
+        condition: service_started
+
+  celery_flower:
+    build: 
+      context: ../
+      dockerfile: infra/Dockerfile
+    command: ["celery", "-A", "workers.celery_app", "flower", "--port=5555"]
+    ports:
+      - "5555:5555"
+    env_file:
+      - ../.env
+    depends_on:
+      - redis
+      - celery_worker
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+
+volumes:
+  pgdata:

@@ -1,0 +1,179 @@
+version: "3.8"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# AI PR Review Pipeline — Docker Compose (Local Development)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+services:
+  # ── Infrastructure ────────────────────────────────────────────────────────
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: codereview
+      POSTGRES_PASSWORD: codereview
+      POSTGRES_DB: codereview
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U codereview"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Application Services ──────────────────────────────────────────────────
+
+  gateway:
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      SERVICE_NAME: gateway
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  webhook:
+    build:
+      context: .
+      dockerfile: services/webhook/Dockerfile
+    ports:
+      - "8001:8001"
+    env_file: .env
+    environment:
+      SERVICE_NAME: webhook
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  orchestrator:
+    build:
+      context: .
+      dockerfile: services/orchestrator/Dockerfile
+    ports:
+      - "8002:8002"
+    env_file: .env
+    environment:
+      SERVICE_NAME: orchestrator
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  reviewer:
+    build:
+      context: .
+      dockerfile: services/reviewer/Dockerfile
+    ports:
+      - "8003:8003"
+    env_file: .env
+    environment:
+      SERVICE_NAME: reviewer
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  learner:
+    build:
+      context: .
+      dockerfile: services/learner/Dockerfile
+    ports:
+      - "8004:8004"
+    env_file: .env
+    environment:
+      SERVICE_NAME: learner
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Celery Worker ─────────────────────────────────────────────────────────
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: workers/celery_app/Dockerfile
+    env_file: .env
+    environment:
+      SERVICE_NAME: celery_worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  celery_flower:
+    image: mher/flower:2.0
+    ports:
+      - "5555:5555"
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/1
+      FLOWER_PORT: 5555
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Observability ─────────────────────────────────────────────────────────
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
