@@ -24,6 +24,7 @@ spec:
       containers:
         - name: gateway
           image: ${ECR_REGISTRY}/ai-pr-reviewer/gateway:latest
+          command: ["uvicorn", "services.gateway.main:app", "--host", "0.0.0.0", "--port", "8000"]
           ports:
             - containerPort: 8000
           envFrom:

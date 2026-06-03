@@ -22,6 +22,7 @@ spec:
       containers:
         - name: webhook
           image: ${ECR_REGISTRY}/ai-pr-reviewer/webhook:latest
+          command: ["uvicorn", "services.webhook.main:app", "--host", "0.0.0.0", "--port", "8001"]
           ports:
             - containerPort: 8001
           envFrom:

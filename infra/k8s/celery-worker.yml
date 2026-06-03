@@ -19,6 +19,7 @@ spec:
       containers:
         - name: celery-worker
           image: ${ECR_REGISTRY}/ai-pr-reviewer/celery-worker:latest
+          command: ["celery", "-A", "workers.celery_app", "worker", "--loglevel=info"]
           envFrom:
             - configMapRef:
                 name: app-config
