@@ -22,6 +22,7 @@ spec:
       containers:
         - name: orchestrator
           image: ${ECR_REGISTRY}/ai-pr-reviewer/orchestrator:latest
+          command: ["uvicorn", "services.orchestrator.main:app", "--host", "0.0.0.0", "--port", "8002"]
           ports:
             - containerPort: 8002
           envFrom:

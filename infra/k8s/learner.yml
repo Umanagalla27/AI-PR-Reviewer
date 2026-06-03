@@ -22,6 +22,7 @@ spec:
       containers:
         - name: learner
           image: ${ECR_REGISTRY}/ai-pr-reviewer/learner:latest
+          command: ["uvicorn", "services.learner.main:app", "--host", "0.0.0.0", "--port", "8004"]
           ports:
             - containerPort: 8004
           envFrom:

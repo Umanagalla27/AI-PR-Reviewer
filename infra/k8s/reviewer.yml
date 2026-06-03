@@ -22,6 +22,7 @@ spec:
       containers:
         - name: reviewer
           image: ${ECR_REGISTRY}/ai-pr-reviewer/reviewer:latest
+          command: ["uvicorn", "services.reviewer.main:app", "--host", "0.0.0.0", "--port", "8003"]
           ports:
             - containerPort: 8003
           envFrom:
