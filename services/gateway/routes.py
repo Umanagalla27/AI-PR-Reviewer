@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import json
 
 import httpx
 import structlog
@@ -87,7 +88,8 @@ async def receive_webhook(
 
     # ── Step 1: Validate signature ──────────────────────────────────────────
     if not _verify_signature(raw_body, x_hub_signature_256, settings.github_webhook_secret):
-        logger.warning("webhook_signature_invalid", event=x_github_event)
+        # avoid using kwarg name `event` which can collide with structlog internals
+        logger.warning("webhook_signature_invalid", github_event=x_github_event)
         github_webhooks_received_total.labels(service="gateway", status="invalid_signature").inc()
         raise HTTPException(status_code=401, detail="Invalid webhook signature")
 
@@ -95,16 +97,20 @@ async def receive_webhook(
 
     # ── Step 2: Filter event type ───────────────────────────────────────────
     if x_github_event != "pull_request":
-        logger.debug("webhook_event_skipped", event=x_github_event)
+        logger.debug("webhook_event_skipped", github_event=x_github_event)
         return {"status": "skipped", "reason": f"event type '{x_github_event}' not handled"}
 
-    body = await request.json() if not isinstance(raw_body, dict) else raw_body
-    import json
-    body = json.loads(raw_body)
+    # Parse JSON consistently from the raw bytes we already read
+    try:
+        body = json.loads(raw_body.decode("utf-8"))
+    except Exception:
+        # Fallback: let FastAPI try to parse (should rarely be necessary)
+        body = await request.json()
+
     action = body.get("action", "")
 
     if action not in ALL_ALLOWED_ACTIONS:
-        logger.debug("webhook_action_skipped", action=action)
+        logger.debug("webhook_action_skipped", pr_action=action)
         return {"status": "skipped", "reason": f"action '{action}' not handled"}
 
     # ── Step 3: Extract and forward ─────────────────────────────────────────
@@ -115,7 +121,7 @@ async def receive_webhook(
         pr_number=payload["pr_number"],
     )
 
-    logger.info("webhook_event_received", action=action, author=payload["author"])
+    logger.info("webhook_event_received", pr_action=action, author=payload["author"])
 
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
@@ -141,7 +147,7 @@ async def receive_webhook(
                     service="gateway", status="forwarded_learn"
                 ).inc()
             else:
-                logger.debug("webhook_closed_not_merged", action=action)
+                logger.debug("webhook_closed_not_merged", pr_action=action)
                 return {"status": "skipped", "reason": "PR closed but not merged"}
 
     except httpx.HTTPError as exc:
