@@ -6,7 +6,8 @@ import pytest
 
 @pytest.mark.asyncio
 async def test_health_check(test_client):
-    async with test_client as client:
+    if True:
+        client = test_client
         response = await client.get("/health")
     assert response.status_code == 200
 
@@ -20,7 +21,8 @@ async def test_post_review_success(
 ):
     """Post review should add inline comments, summary, and label."""
     
-    async with test_client as client:
+    if True:
+        client = test_client
         response = await client.post("/review/post", json=review_post_request)
         
     assert response.status_code == 200

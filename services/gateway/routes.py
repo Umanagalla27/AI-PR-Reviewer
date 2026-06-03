@@ -87,7 +87,7 @@ async def receive_webhook(
     raw_body = await request.body()
 
     # ── Step 1: Validate signature ──────────────────────────────────────────
-    if not _verify_signature(raw_body, x_hub_signature_256, settings.github_webhook_secret):
+    if not _verify_signature(raw_body, x_hub_signature_256, settings.GITHUB_WEBHOOK_SECRET):
         # avoid using kwarg name `event` which can collide with structlog internals
         logger.warning("webhook_signature_invalid", github_event=x_github_event)
         github_webhooks_received_total.labels(service="gateway", status="invalid_signature").inc()
@@ -128,7 +128,7 @@ async def receive_webhook(
             if action in REVIEW_ACTIONS:
                 # Forward to Webhook service for review processing
                 response = await client.post(
-                    f"{settings.webhook_service_url}/pr/process",
+                    f"{settings.WEBHOOK_SERVICE_URL}/pr/process",
                     json=payload,
                 )
                 response.raise_for_status()
@@ -139,7 +139,7 @@ async def receive_webhook(
             elif action in LEARN_ACTIONS and payload.get("merged"):
                 # Forward to Learner service for pattern extraction
                 response = await client.post(
-                    f"{settings.learner_url}/learn/merged-pr",
+                    f"{settings.LEARNER_URL}/learn/merged-pr",
                     json=payload,
                 )
                 response.raise_for_status()

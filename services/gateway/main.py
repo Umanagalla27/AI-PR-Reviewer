@@ -53,8 +53,8 @@ async def github_webhook(
         raise HTTPException(status_code=401, detail="Invalid signature")
         
     if x_github_event != "pull_request":
-        logger.info("ignored_non_pr_event", event=x_github_event)
-        return {"status": "ignored", "reason": "not a pull_request event"}
+        logger.info("skipped_non_pr_event", github_event=x_github_event)
+        return {"status": "skipped", "reason": "not a pull_request event"}
         
     try:
         payload = json.loads(raw_body)
@@ -65,12 +65,12 @@ async def github_webhook(
     allowed_actions = ["opened", "synchronize", "reopened", "closed"]
     
     if action not in allowed_actions:
-        logger.info("ignored_pr_action", action=action)
-        return {"status": "ignored", "reason": f"action {action} not processed"}
+        logger.info("skipped_pr_action", action=action)
+        return {"status": "skipped", "reason": f"action {action} not processed"}
         
     if action == "closed" and not payload.get("pull_request", {}).get("merged", False):
-        logger.info("ignored_closed_unmerged_pr")
-        return {"status": "ignored", "reason": "pr closed but not merged"}
+        logger.info("skipped_closed_unmerged_pr")
+        return {"status": "skipped", "reason": "pr closed but not merged"}
         
     # Valid payload, enqueue forwarding
     background_tasks.add_task(forward_webhook, payload)

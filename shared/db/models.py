@@ -28,6 +28,7 @@ class PullRequest(Base):
     head_sha = Column(String(40), nullable=False)
     base_sha = Column(String(40), nullable=False)
     author = Column(String, nullable=False)
+    installation_id = Column(Integer, nullable=True)
     status = Column(Enum(PRStatus), default=PRStatus.pending, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

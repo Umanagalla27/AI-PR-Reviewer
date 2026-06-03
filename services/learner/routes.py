@@ -96,7 +96,7 @@ async def learn_from_merged_pr(
 
     if diff_text or findings_data:
         try:
-            client = AsyncOpenAI(api_key=settings.openai_api_key)
+            client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
 
             user_prompt = LEARNER_USER_PROMPT.format(
                 findings_json=json.dumps(findings_data, indent=2),
@@ -104,7 +104,7 @@ async def learn_from_merged_pr(
             )
 
             response = await client.chat.completions.create(
-                model=settings.openai_model,
+                model=settings.OPENAI_MODEL,
                 messages=[
                     {"role": "system", "content": LEARNER_SYSTEM_PROMPT},
                     {"role": "user", "content": user_prompt},
@@ -172,7 +172,7 @@ async def learn_from_merged_pr(
 
         upserted += 1
 
-    await db.flush()
+    await db.commit()
 
     logger.info("learning_complete", patterns_upserted=upserted)
 

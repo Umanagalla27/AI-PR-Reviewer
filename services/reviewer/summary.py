@@ -95,7 +95,7 @@ async def generate_summary(findings: list[dict]) -> str:
 
     # Try LLM-generated summary
     try:
-        client = AsyncOpenAI(api_key=settings.openai_api_key)
+        client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
 
         # Prepare a compact version of findings for the prompt
         compact_findings = [
@@ -114,7 +114,7 @@ async def generate_summary(findings: list[dict]) -> str:
         )
 
         response = await client.chat.completions.create(
-            model=settings.openai_model,
+            model=settings.OPENAI_MODEL,
             messages=[
                 {"role": "system", "content": SUMMARY_SYSTEM_PROMPT},
                 {"role": "user", "content": user_prompt},

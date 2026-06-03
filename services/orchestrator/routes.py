@@ -23,7 +23,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from agents.graph import review_graph
 from shared.config.settings import get_settings
-from shared.db.models import Finding, Severity, StylePattern
+from shared.db.models import Finding, SeverityLevel as Severity, StylePattern
 from shared.db.session import get_db_session
 from shared.github_client.auth import get_installation_token
 from shared.github_client.client import GitHubClient
@@ -140,7 +140,7 @@ async def start_review(
             )
             db.add(finding)
 
-        await db.flush()
+        await db.commit()
         logger.info("findings_saved", count=len(merged_findings))
 
         # ── Step 7: POST to Reviewer service ────────────────────────────────
@@ -158,7 +158,7 @@ async def start_review(
 
         async with httpx.AsyncClient(timeout=120.0) as client:
             response = await client.post(
-                f"{settings.reviewer_url}/review/post",
+                f"{settings.REVIEWER_URL}/review/post",
                 json={
                     "pr_id": str(request.pr_id),
                     "repo_full_name": request.repo_full_name,

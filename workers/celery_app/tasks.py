@@ -3,7 +3,7 @@ import asyncio
 import httpx
 from celery import Celery
 from shared.config.settings import settings
-from shared.db.session import get_db_session
+from shared.db.session import get_db_context
 from shared.db.models import PullRequest, PRStatus
 from sqlalchemy import update
 from shared.observability import logger
@@ -25,7 +25,7 @@ celery_app.conf.update(
 # Helper function to run async DB updates from sync Celery task
 def _update_pr_status(pr_id: str, status: PRStatus):
     async def update_db():
-        async with get_db_session() as session:
+        async with get_db_context() as session:
             stmt = update(PullRequest).where(PullRequest.id == pr_id).values(status=status)
             await session.execute(stmt)
             await session.commit()
