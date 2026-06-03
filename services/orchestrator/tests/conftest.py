@@ -46,7 +46,7 @@ def review_start_request():
 
 @pytest.fixture
 def mock_github_client():
-    with patch("services.orchestrator.routes.GitHubClient") as mock_cls:
+    with patch("services.orchestrator.main.GitHubClient") as mock_cls:
         mock_instance = MagicMock()
         mock_instance.fetch_pr_diff = AsyncMock(return_value="""diff --git a/file.py b/file.py
 +++ b/file.py
@@ -59,13 +59,13 @@ def mock_github_client():
         
 @pytest.fixture
 def mock_get_installation_token():
-    with patch("services.orchestrator.routes.get_installation_token", new_callable=AsyncMock) as mock:
+    with patch("services.orchestrator.main.get_installation_token", new_callable=AsyncMock) as mock:
         mock.return_value = "fake-token"
         yield mock
         
 @pytest.fixture
 def mock_review_graph():
-    with patch("services.orchestrator.routes.review_graph") as mock:
+    with patch("services.orchestrator.main.review_graph") as mock:
         mock.ainvoke = AsyncMock(return_value={
             "merged_findings": [
                 {
