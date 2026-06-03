@@ -32,8 +32,7 @@ dev = [
     "respx>=0.20.0",
     "factory-boy>=3.3.0",
     "ruff>=0.0.280",
-    "pytest-cov",
-    "aiosqlite"
+    "pytest-cov"
 ]
 
 [build-system]

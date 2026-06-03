@@ -18,7 +18,7 @@ async def test_health_check(test_client):
 
 
 @pytest.mark.asyncio
-@patch("services.orchestrator.main.httpx.AsyncClient")
+@patch("services.orchestrator.routes.httpx.AsyncClient")
 async def test_start_review_success(
     mock_httpx_cls, 
     test_client, 
