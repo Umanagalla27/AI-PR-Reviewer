@@ -38,7 +38,7 @@ def review_post_request():
 
 @pytest.fixture
 def mock_github_client():
-    with patch("services.reviewer.main.GitHubClient") as mock_cls:
+    with patch("services.reviewer.routes.GitHubClient") as mock_cls:
         mock_instance = MagicMock()
         mock_instance.post_review_comment = AsyncMock()
         mock_instance.post_review_summary = AsyncMock()
@@ -48,12 +48,12 @@ def mock_github_client():
         
 @pytest.fixture
 def mock_get_installation_token():
-    with patch("services.reviewer.main.get_installation_token", new_callable=AsyncMock) as mock:
+    with patch("services.reviewer.routes.get_installation_token", new_callable=AsyncMock) as mock:
         mock.return_value = "fake-token"
         yield mock
         
 @pytest.fixture
 def mock_generate_summary():
-    with patch("services.reviewer.main.generate_summary", new_callable=AsyncMock) as mock:
+    with patch("services.reviewer.routes.generate_summary", new_callable=AsyncMock) as mock:
         mock.return_value = "Test summary body"
         yield mock
