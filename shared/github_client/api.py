@@ -1,5 +1,4 @@
 import httpx
-from typing import List, Dict, Any
 from shared.github_client.auth import get_installation_token
 
 async def get_pr_diff(repo_full_name: str, pr_number: int, installation_id: int) -> str:

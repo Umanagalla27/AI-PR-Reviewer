@@ -1,7 +1,8 @@
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import List
 from datetime import datetime
 from uuid import UUID
+from shared.schemas.finding import FindingBase
 
 class PRBase(BaseModel):
     repo_full_name: str
@@ -12,8 +13,6 @@ class PRBase(BaseModel):
 
 class PRCreate(PRBase):
     pass
-
-from shared.schemas.finding import FindingBase
 
 class PRResponse(PRBase):
     id: UUID

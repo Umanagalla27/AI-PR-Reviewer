@@ -1,4 +1,3 @@
-import os
 import asyncio
 import httpx
 from celery import Celery

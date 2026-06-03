@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
 
 from agents.merger import merge_findings_node, _message_similarity, _deduplicate_findings
 
