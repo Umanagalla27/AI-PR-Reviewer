@@ -8,12 +8,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy dependency files
-COPY pyproject.toml .
+COPY pyproject.toml README.md .
+RUN mkdir agents services shared workers
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -e ".[dev]" 2>/dev/null || pip install --no-cache-dir .
 
 # Copy application code
+COPY alembic.ini .
 COPY shared/ shared/
 COPY agents/ agents/
 COPY services/gateway/ services/gateway/

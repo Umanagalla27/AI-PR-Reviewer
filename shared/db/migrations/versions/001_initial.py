@@ -20,11 +20,12 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     # ── Enums ────────────────────────────────────────────────────────────────
-    pr_status_enum = sa.Enum(
-        "pending", "reviewing", "completed", "failed", name="pr_status"
+    from sqlalchemy.dialects.postgresql import ENUM
+    pr_status_enum = ENUM(
+        "pending", "reviewing", "completed", "failed", name="pr_status", create_type=False
     )
-    severity_enum = sa.Enum(
-        "error", "warning", "info", "suggestion", name="finding_severity"
+    severity_enum = ENUM(
+        "error", "warning", "info", "suggestion", name="finding_severity", create_type=False
     )
 
     pr_status_enum.create(op.get_bind(), checkfirst=True)

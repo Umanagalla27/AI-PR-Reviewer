@@ -12,6 +12,9 @@ from shared.observability.metrics import (
 )
 from shared.observability.logging import setup_logging, get_logger
 from shared.observability.tracing import get_langfuse, create_trace, create_generation
+from shared.observability.middleware import RequestIdMiddleware
+
+logger = get_logger()
 
 __all__ = [
     "github_webhooks_received_total",
@@ -29,4 +32,6 @@ __all__ = [
     "get_langfuse",
     "create_trace",
     "create_generation",
+    "logger",
+    "RequestIdMiddleware",
 ]

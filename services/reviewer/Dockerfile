@@ -6,9 +6,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-COPY pyproject.toml .
+COPY pyproject.toml README.md .
+RUN mkdir agents services shared workers
 RUN pip install --no-cache-dir -e ".[dev]" 2>/dev/null || pip install --no-cache-dir .
 
+COPY alembic.ini .
 COPY shared/ shared/
 COPY agents/ agents/
 COPY services/reviewer/ services/reviewer/

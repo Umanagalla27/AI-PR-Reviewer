@@ -10,14 +10,12 @@ from __future__ import annotations
 
 from celery import Celery
 
-from shared.config.settings import get_settings
-
-settings = get_settings()
+from shared.config.settings import settings
 
 celery_app = Celery(
     "ai_pr_reviewer",
-    broker=settings.celery_broker_url,
-    backend=settings.celery_result_backend,
+    broker=settings.CELERY_BROKER_URL,
+    backend=settings.CELERY_RESULT_BACKEND,
 )
 
 celery_app.conf.update(
