@@ -53,7 +53,7 @@ async def github_webhook(
         raise HTTPException(status_code=401, detail="Invalid signature")
         
     if x_github_event != "pull_request":
-        logger.info("ignored_non_pr_event", event=x_github_event)
+        logger.info("ignored_non_pr_event", github_event=x_github_event)
         return {"status": "ignored", "reason": "not a pull_request event"}
         
     try:

@@ -59,7 +59,7 @@ async def test_webhook_health_check(test_client):
 
 
 @pytest.mark.asyncio
-@pytest.mark.patch("services.webhook.routes.review_pr.delay")
+@pytest.mark.patch("services.webhook.main.review_pr.delay")
 async def test_process_pr_new_inserts_and_enqueues(mock_delay, test_client, pr_process_request):
     """A new PR should be inserted into DB and enqueued for review."""
     async with test_client as client:
@@ -94,7 +94,7 @@ async def test_process_pr_new_inserts_and_enqueues(mock_delay, test_client, pr_p
 
 
 @pytest.mark.asyncio
-@pytest.mark.patch("services.webhook.routes.review_pr.delay")
+@pytest.mark.patch("services.webhook.main.review_pr.delay")
 async def test_process_pr_deduplicates_existing(mock_delay, test_client, pr_process_request):
     """If PR with same repo and head_sha exists and is not failed, it should be skipped."""
     
@@ -119,7 +119,7 @@ async def test_process_pr_deduplicates_existing(mock_delay, test_client, pr_proc
 
 
 @pytest.mark.asyncio
-@pytest.mark.patch("services.webhook.routes.review_pr.delay")
+@pytest.mark.patch("services.webhook.main.review_pr.delay")
 async def test_process_pr_retries_failed(mock_delay, test_client, pr_process_request):
     """If PR exists but is failed, it should be retried (status reset to pending and enqueued)."""
     

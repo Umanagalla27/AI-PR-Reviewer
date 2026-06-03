@@ -40,7 +40,7 @@ def learn_request():
 
 @pytest.fixture
 def mock_github_client():
-    with patch("services.learner.routes.GitHubClient") as mock_cls:
+    with patch("services.learner.main.GitHubClient") as mock_cls:
         mock_instance = MagicMock()
         mock_instance.fetch_pr_diff = AsyncMock(return_value="diff content")
         mock_cls.return_value = mock_instance
@@ -48,7 +48,7 @@ def mock_github_client():
         
 @pytest.fixture
 def mock_get_installation_token():
-    with patch("services.learner.routes.get_installation_token", new_callable=AsyncMock) as mock:
+    with patch("services.learner.main.get_installation_token", new_callable=AsyncMock) as mock:
         mock.return_value = "fake-token"
         yield mock
 

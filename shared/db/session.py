@@ -21,6 +21,19 @@ async_session_factory = async_sessionmaker(
     autocommit=False
 )
 
+def create_db_engine(url: str, **kwargs):
+    return create_async_engine(url, **kwargs)
+
+def get_session_factory():
+    return async_session_factory
+
+async def init_db(engine_instance=None):
+    from shared.db.models import Base
+    if engine_instance is None:
+        engine_instance = engine
+    async with engine_instance.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
 @contextlib.asynccontextmanager
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     """
