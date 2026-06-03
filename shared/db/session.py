@@ -29,12 +29,25 @@ async_session_factory = async_sessionmaker(
     autocommit=False
 )
 
-@contextlib.asynccontextmanager
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
+    """
+    FastAPI dependency for database sessions.
+    """
+    async with async_session_factory() as session:
+        try:
+            yield session
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
+
+@contextlib.asynccontextmanager
+async def get_db_context() -> AsyncGenerator[AsyncSession, None]:
     """
     Async context manager for database sessions.
     Usage:
-        async with get_db_session() as session:
+        async with get_db_context() as session:
             await session.execute(...)
     """
     async with async_session_factory() as session:

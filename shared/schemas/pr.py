@@ -13,6 +13,8 @@ class PRBase(BaseModel):
 class PRCreate(PRBase):
     pass
 
+from shared.schemas.finding import FindingBase
+
 class PRResponse(PRBase):
     id: UUID
     status: str
@@ -21,6 +23,27 @@ class PRResponse(PRBase):
 
     class Config:
         from_attributes = True
+
+class LearnMergedPRRequest(PRBase):
+    installation_id: int
+
+class ReviewStartRequest(PRBase):
+    pr_id: UUID
+    installation_id: int
+
+class ReviewPostRequest(PRBase):
+    pr_id: UUID
+    installation_id: int
+    findings: List[FindingBase]
+
+class PRProcessRequest(PRBase):
+    action: str
+    installation_id: int
+    merged: bool
+
+class PRProcessResponse(BaseModel):
+    pr_id: UUID
+    status: str
 
 class PullRequestEvent(BaseModel):
     action: str

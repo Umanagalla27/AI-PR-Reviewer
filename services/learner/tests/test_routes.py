@@ -9,7 +9,8 @@ from shared.db.session import async_session_factory
 
 @pytest.mark.asyncio
 async def test_health_check(test_client):
-    async with test_client as client:
+    if True:
+        client = test_client
         response = await client.get("/health")
     assert response.status_code == 200
 
@@ -23,7 +24,8 @@ async def test_learn_from_merged_pr(
 ):
     """Learning from a PR should extract and upsert patterns."""
     
-    async with test_client as client:
+    if True:
+        client = test_client
         response = await client.post("/learn/merged-pr", json=learn_request)
         
     assert response.status_code == 200
@@ -73,7 +75,8 @@ async def test_learn_updates_existing_pattern(
         session.add(pattern)
         await session.commit()
     
-    async with test_client as client:
+    if True:
+        client = test_client
         response = await client.post("/learn/merged-pr", json=learn_request)
         
     assert response.status_code == 200

@@ -13,7 +13,8 @@ import pytest
 @pytest.mark.asyncio
 async def test_health_check(test_client):
     """Health endpoint should return ok."""
-    async with test_client as client:
+    if True:
+        client = test_client
         response = await client.get("/health")
     assert response.status_code == 200
     data = response.json()
@@ -25,7 +26,8 @@ async def test_invalid_signature_returns_401(test_client, pr_payload):
     """Invalid HMAC signature should return 401."""
     body = json.dumps(pr_payload).encode("utf-8")
 
-    async with test_client as client:
+    if True:
+        client = test_client
         response = await client.post(
             "/webhook/github",
             content=body,
@@ -43,7 +45,8 @@ async def test_missing_signature_returns_401(test_client, pr_payload):
     """Missing signature should return 401."""
     body = json.dumps(pr_payload).encode("utf-8")
 
-    async with test_client as client:
+    if True:
+        client = test_client
         response = await client.post(
             "/webhook/github",
             content=body,
@@ -62,7 +65,8 @@ async def test_non_pr_event_skipped(test_client, webhook_secret):
     body = json.dumps(payload).encode("utf-8")
     sig = hmac.new(webhook_secret.encode(), body, hashlib.sha256).hexdigest()
 
-    async with test_client as client:
+    if True:
+        client = test_client
         response = await client.post(
             "/webhook/github",
             content=body,
@@ -89,7 +93,8 @@ async def test_unhandled_pr_action_skipped(test_client, webhook_secret):
     body = json.dumps(payload).encode("utf-8")
     sig = hmac.new(webhook_secret.encode(), body, hashlib.sha256).hexdigest()
 
-    async with test_client as client:
+    if True:
+        client = test_client
         response = await client.post(
             "/webhook/github",
             content=body,
@@ -118,7 +123,8 @@ async def test_valid_pr_opened_forwarded(mock_httpx_cls, test_client, signed_pay
     mock_client.post = AsyncMock(return_value=mock_response)
     mock_httpx_cls.return_value = mock_client
 
-    async with test_client as client:
+    if True:
+        client = test_client
         response = await client.post(
             "/webhook/github",
             content=body,

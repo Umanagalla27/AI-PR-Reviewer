@@ -15,13 +15,14 @@ import uuid
 from datetime import datetime, timezone
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.db.models import PRStatus, PullRequest
 from shared.db.session import get_db_session
 from shared.schemas.pr import PRProcessRequest, PRProcessResponse
+from workers.celery_app.tasks import review_pr
 
 logger = structlog.get_logger(__name__)
 
@@ -52,7 +53,7 @@ async def process_pr(
     result = await db.execute(stmt)
     existing = result.scalar_one_or_none()
 
-    if existing and existing.status != PRStatus.FAILED:
+    if existing and existing.status != PRStatus.failed:
         logger.info(
             "pr_deduplicated",
             pr_id=str(existing.id),
@@ -63,9 +64,9 @@ async def process_pr(
     # ── Step 2: Insert new PullRequest ──────────────────────────────────────
     pr_id = uuid.uuid4()
 
-    if existing and existing.status == PRStatus.FAILED:
+    if existing and existing.status == PRStatus.failed:
         # Reuse existing row, reset status
-        existing.status = PRStatus.PENDING
+        existing.status = PRStatus.pending
         existing.updated_at = datetime.now(timezone.utc)
         pr_id = existing.id
         logger.info("pr_retry_after_failure", pr_id=str(pr_id))
@@ -78,18 +79,16 @@ async def process_pr(
             base_sha=request.base_sha,
             author=request.author,
             installation_id=request.installation_id,
-            status=PRStatus.PENDING,
+            status=PRStatus.pending,
         )
         db.add(pr)
 
-    await db.flush()
+    await db.commit()
 
     logger.info("pr_inserted", pr_id=str(pr_id), status="pending")
 
     # ── Step 3: Enqueue Celery task ─────────────────────────────────────────
     try:
-        from workers.celery_app.tasks import review_pr
-
         review_pr.delay(
             pr_id=str(pr_id),
             repo=request.repo_full_name,

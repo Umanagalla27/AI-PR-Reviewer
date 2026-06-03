@@ -23,6 +23,8 @@ def review_post_request():
         "repo_full_name": "owner/repo",
         "pr_number": 123,
         "head_sha": "abc123def456",
+        "base_sha": "def789abc012",
+        "author": "testuser",
         "installation_id": 12345,
         "findings": [
             {

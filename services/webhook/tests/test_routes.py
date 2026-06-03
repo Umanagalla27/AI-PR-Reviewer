@@ -52,7 +52,8 @@ def pr_process_request():
 @pytest.mark.asyncio
 async def test_webhook_health_check(test_client):
     """Health check should return ok."""
-    async with test_client as client:
+    if True:
+        client = test_client
         response = await client.get("/health")
     
     assert response.status_code == 200
@@ -64,7 +65,8 @@ async def test_webhook_health_check(test_client):
 @patch("services.webhook.routes.review_pr.delay")
 async def test_process_pr_new_inserts_and_enqueues(mock_delay, test_client, pr_process_request):
     """A new PR should be inserted into DB and enqueued for review."""
-    async with test_client as client:
+    if True:
+        client = test_client
         response = await client.post("/pr/process", json=pr_process_request)
         
     assert response.status_code == 200
@@ -82,7 +84,7 @@ async def test_process_pr_new_inserts_and_enqueues(mock_delay, test_client, pr_p
         
         assert pr is not None
         assert pr.repo_full_name == "owner/repo"
-        assert pr.status == PRStatus.PENDING
+        assert pr.status == PRStatus.pending
         
     # Verify Celery enqueue
     mock_delay.assert_called_once_with(
@@ -101,14 +103,16 @@ async def test_process_pr_deduplicates_existing(mock_delay, test_client, pr_proc
     """If PR with same repo and head_sha exists and is not failed, it should be skipped."""
     
     # First request
-    async with test_client as client:
+    if True:
+        client = test_client
         res1 = await client.post("/pr/process", json=pr_process_request)
         assert res1.json()["status"] == "queued"
         
     mock_delay.reset_mock()
     
     # Second request with same data
-    async with test_client as client:
+    if True:
+        client = test_client
         res2 = await client.post("/pr/process", json=pr_process_request)
         
     assert res2.status_code == 200
@@ -137,13 +141,14 @@ async def test_process_pr_retries_failed(mock_delay, test_client, pr_process_req
             base_sha=pr_process_request["base_sha"],
             author=pr_process_request["author"],
             installation_id=pr_process_request["installation_id"],
-            status=PRStatus.FAILED,
+            status=PRStatus.failed,
         )
         session.add(pr)
         await session.commit()
         
     # Request to process same PR
-    async with test_client as client:
+    if True:
+        client = test_client
         response = await client.post("/pr/process", json=pr_process_request)
         
     assert response.status_code == 200
@@ -157,7 +162,7 @@ async def test_process_pr_retries_failed(mock_delay, test_client, pr_process_req
         stmt = select(PullRequest).where(PullRequest.id == failed_id)
         result = await session.execute(stmt)
         pr = result.scalar_one_or_none()
-        assert pr.status == PRStatus.PENDING
+        assert pr.status == PRStatus.pending
         
     # Verify enqueue
     mock_delay.assert_called_once()

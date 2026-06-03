@@ -12,7 +12,8 @@ from shared.db.session import async_session_factory
 
 @pytest.mark.asyncio
 async def test_health_check(test_client):
-    async with test_client as client:
+    if True:
+        client = test_client
         response = await client.get("/health")
     assert response.status_code == 200
 
@@ -51,7 +52,8 @@ async def test_start_review_success(
         await session.commit()
     
     # Run request
-    async with test_client as client:
+    if True:
+        client = test_client
         response = await client.post("/review/start", json=review_start_request)
         
     assert response.status_code == 200
