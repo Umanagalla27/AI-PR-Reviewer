@@ -15,20 +15,26 @@ def get_severity_weight(severity: SeverityLevel) -> int:
 
 def compute_similarity(msg1: str, msg2: str) -> float:
     """Computes similarity ratio between two finding messages."""
+    if not msg1 or not msg2:
+        return 0.0
     return difflib.SequenceMatcher(None, msg1.lower(), msg2.lower()).ratio()
 
 def deduplicate_findings(findings: List[FindingCreate]) -> List[FindingCreate]:
     """Deduplicate findings based on file, line, and message similarity."""
     
+    deduped = []
     # Group by (file_path, line_number)
     grouped: Dict[Tuple[str, int], List[FindingCreate]] = {}
+    
     for f in findings:
+        if f.line_number is None:
+            deduped.append(f)
+            continue
+            
         key = (f.file_path, f.line_number)
         if key not in grouped:
             grouped[key] = []
         grouped[key].append(f)
-        
-    deduped = []
     
     for key, group_findings in grouped.items():
         if len(group_findings) <= 1:
