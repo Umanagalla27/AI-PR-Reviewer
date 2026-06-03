@@ -87,7 +87,7 @@ async def receive_webhook(
 
     # ── Step 1: Validate signature ──────────────────────────────────────────
     if not _verify_signature(raw_body, x_hub_signature_256, settings.github_webhook_secret):
-        logger.warning("webhook_signature_invalid", event=x_github_event)
+        logger.warning("webhook_signature_invalid", github_event=x_github_event)
         github_webhooks_received_total.labels(service="gateway", status="invalid_signature").inc()
         raise HTTPException(status_code=401, detail="Invalid webhook signature")
 
@@ -95,7 +95,7 @@ async def receive_webhook(
 
     # ── Step 2: Filter event type ───────────────────────────────────────────
     if x_github_event != "pull_request":
-        logger.debug("webhook_event_skipped", event=x_github_event)
+        logger.debug("webhook_event_skipped", github_event=x_github_event)
         return {"status": "skipped", "reason": f"event type '{x_github_event}' not handled"}
 
     body = await request.json() if not isinstance(raw_body, dict) else raw_body
