@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from shared.db.models import StylePattern
-from shared.db.session import get_session_factory
+from shared.db.session import async_session_factory
 
 @pytest.mark.asyncio
 async def test_health_check(test_client):
@@ -38,7 +38,7 @@ async def test_learn_from_merged_pr(
     mock_openai_response.chat.completions.create.assert_called_once()
     
     # Verify pattern saved to DB
-    factory = get_session_factory()
+    factory = async_session_factory
     async with factory() as session:
         from sqlalchemy import select
         stmt = select(StylePattern)
@@ -62,7 +62,7 @@ async def test_learn_updates_existing_pattern(
     """Learning an existing pattern should increment its frequency."""
     
     # Insert existing pattern
-    factory = get_session_factory()
+    factory = async_session_factory
     async with factory() as session:
         pattern = StylePattern(
             repo_full_name="owner/repo",

@@ -12,17 +12,19 @@ from datetime import datetime, timezone
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from shared.db.models import PullRequest, PRStatus
-from shared.db.session import init_db, create_db_engine, get_session_factory
+from shared.db.models import PullRequest, PRStatus, Base
+from shared.db.session import engine, async_session_factory
 from services.webhook.main import app
+from unittest.mock import patch
 
 @pytest.fixture(autouse=True)
 async def setup_test_db():
     """Setup and teardown in-memory SQLite DB for tests."""
-    engine = create_db_engine("sqlite+aiosqlite:///:memory:", echo=False)
-    await init_db(engine)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
     yield
-    await engine.dispose()
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
 
 
 @pytest.fixture
@@ -59,7 +61,7 @@ async def test_webhook_health_check(test_client):
 
 
 @pytest.mark.asyncio
-@pytest.mark.patch("services.webhook.routes.review_pr.delay")
+@patch("services.webhook.routes.review_pr.delay")
 async def test_process_pr_new_inserts_and_enqueues(mock_delay, test_client, pr_process_request):
     """A new PR should be inserted into DB and enqueued for review."""
     async with test_client as client:
@@ -71,7 +73,7 @@ async def test_process_pr_new_inserts_and_enqueues(mock_delay, test_client, pr_p
     assert "pr_id" in data
     
     # Verify DB insertion
-    factory = get_session_factory()
+    factory = async_session_factory
     async with factory() as session:
         from sqlalchemy import select
         stmt = select(PullRequest).where(PullRequest.id == uuid.UUID(data["pr_id"]))
@@ -94,7 +96,7 @@ async def test_process_pr_new_inserts_and_enqueues(mock_delay, test_client, pr_p
 
 
 @pytest.mark.asyncio
-@pytest.mark.patch("services.webhook.routes.review_pr.delay")
+@patch("services.webhook.routes.review_pr.delay")
 async def test_process_pr_deduplicates_existing(mock_delay, test_client, pr_process_request):
     """If PR with same repo and head_sha exists and is not failed, it should be skipped."""
     
@@ -119,12 +121,12 @@ async def test_process_pr_deduplicates_existing(mock_delay, test_client, pr_proc
 
 
 @pytest.mark.asyncio
-@pytest.mark.patch("services.webhook.routes.review_pr.delay")
+@patch("services.webhook.routes.review_pr.delay")
 async def test_process_pr_retries_failed(mock_delay, test_client, pr_process_request):
     """If PR exists but is failed, it should be retried (status reset to pending and enqueued)."""
     
     # Setup: Insert a failed PR
-    factory = get_session_factory()
+    factory = async_session_factory
     failed_id = uuid.uuid4()
     async with factory() as session:
         pr = PullRequest(

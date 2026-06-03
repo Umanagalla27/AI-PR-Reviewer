@@ -11,16 +11,18 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from unittest.mock import AsyncMock, patch, MagicMock
 
-from shared.db.session import init_db, create_db_engine, get_session_factory
+from shared.db.session import engine
+from shared.db.models import Base
 from services.orchestrator.main import app
 
 @pytest.fixture(autouse=True)
 async def setup_test_db():
     """Setup and teardown in-memory SQLite DB for tests."""
-    engine = create_db_engine("sqlite+aiosqlite:///:memory:", echo=False)
-    await init_db(engine)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
     yield
-    await engine.dispose()
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
 
 
 @pytest.fixture

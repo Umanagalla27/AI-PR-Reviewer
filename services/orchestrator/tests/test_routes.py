@@ -7,7 +7,7 @@ from httpx import AsyncClient
 from unittest.mock import AsyncMock, patch
 
 from shared.db.models import StylePattern, Finding
-from shared.db.session import get_session_factory
+from shared.db.session import async_session_factory
 
 
 @pytest.mark.asyncio
@@ -40,7 +40,7 @@ async def test_start_review_success(
     mock_httpx_cls.return_value = mock_client
     
     # Add a style pattern to the DB to test loading
-    factory = get_session_factory()
+    factory = async_session_factory
     async with factory() as session:
         pattern = StylePattern(
             repo_full_name="owner/repo",
