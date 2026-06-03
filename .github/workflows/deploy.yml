@@ -2,8 +2,9 @@ name: Deploy Pipeline
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   test:
@@ -14,10 +15,10 @@ jobs:
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: "3.11"
           
@@ -39,19 +40,14 @@ jobs:
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@5fd3084fc36e372ff1fff382a39b10d03659f355
-        env:
-          K1: AKIA3Q2D
-          K2: PLGZDLS5B2U3
-          S1: E70R9A+jvcrJ+V
-          S2: j85hvxh/83hcRuB3AR06TOlSxY
         with:
-          aws-access-key-id: ${{ env.K1 }}${{ env.K2 }}
-          aws-secret-access-key: ${{ env.S1 }}${{ env.S2 }}
-          aws-region: us-west-2
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
           
       - name: Login to Amazon ECR
         id: login-ecr
@@ -72,26 +68,21 @@ jobs:
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@5fd3084fc36e372ff1fff382a39b10d03659f355
-        env:
-          K1: AKIA3Q2D
-          K2: PLGZDLS5B2U3
-          S1: E70R9A+jvcrJ+V
-          S2: j85hvxh/83hcRuB3AR06TOlSxY
         with:
-          aws-access-key-id: ${{ env.K1 }}${{ env.K2 }}
-          aws-secret-access-key: ${{ env.S1 }}${{ env.S2 }}
-          aws-region: us-west-2
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
           
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@5a88a04c91d5c6f97aae0d9be790e64d9b1d47b7
 
       - name: Update Kubeconfig
-        run: aws eks update-kubeconfig --name fraud-detection-cluster --region us-west-2
+        run: aws eks update-kubeconfig --name codereview-cluster --region us-east-1
         
       - name: Deploy to EKS
         env:

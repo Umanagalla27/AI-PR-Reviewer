@@ -26,9 +26,9 @@ async def test_architecture_agent_parses_findings(sample_state, mock_openai_clie
 
     client.chat.completions.create.return_value = make_response(findings_json)
 
-    from agents.architecture_agent import architecture_review_node
-    result = await architecture_review_node(sample_state)
+    from agents.architecture_agent import architecture_agent
+    result = await architecture_agent(sample_state)
 
     assert len(result["arch_findings"]) == 1
-    assert result["arch_findings"][0]["agent"] == "architecture"
-    assert "SRP" in result["arch_findings"][0]["message"]
+    assert result["arch_findings"][0].agent == "architecture"
+    assert "SRP" in result["arch_findings"][0].message

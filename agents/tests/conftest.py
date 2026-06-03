@@ -85,9 +85,8 @@ def mock_openai_response():
 
 @pytest.fixture
 def mock_openai_client(mock_openai_response):
-    """Patch the OpenAI AsyncClient for testing."""
-    with patch("openai.AsyncOpenAI") as mock_cls:
-        client = AsyncMock()
-        mock_cls.return_value = client
-        client.chat.completions.create = AsyncMock()
-        yield client, mock_openai_response
+    """Patch the OpenAI AsyncClient and Langfuse for testing."""
+    with patch("agents.utils.client") as mock_client, patch("agents.utils.langfuse") as mock_langfuse:
+        mock_client.chat.completions.create = AsyncMock()
+        mock_langfuse.generation = MagicMock()
+        yield mock_client, mock_openai_response

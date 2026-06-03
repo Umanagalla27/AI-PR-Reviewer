@@ -28,30 +28,30 @@ async def call_llm(
         {"role": "user", "content": user_content}
     ]
     
-    response = await client.chat.completions.create(
-        model=settings.OPENAI_MODEL,
-        messages=messages,
-        temperature=0.1,
-        response_format={"type": "json_object"}
-    )
-    
-    result_str = response.choices[0].message.content
-    usage = response.usage
-    
-    if trace_id:
-        langfuse.generation(
-            trace_id=trace_id,
-            name=f"{agent_name}_review",
-            model=settings.OPENAI_MODEL,
-            input=messages,
-            output=result_str,
-            usage={
-                "input": usage.prompt_tokens,
-                "output": usage.completion_tokens
-            }
-        )
-    
     try:
+        response = await client.chat.completions.create(
+            model=settings.OPENAI_MODEL,
+            messages=messages,
+            temperature=0.1,
+            response_format={"type": "json_object"}
+        )
+        
+        result_str = response.choices[0].message.content
+        usage = response.usage
+        
+        if trace_id:
+            langfuse.generation(
+                trace_id=trace_id,
+                name=f"{agent_name}_review",
+                model=settings.OPENAI_MODEL,
+                input=messages,
+                output=result_str,
+                usage={
+                    "input": usage.prompt_tokens,
+                    "output": usage.completion_tokens
+                }
+            )
+        
         return json.loads(result_str)
     except Exception:
         return {"findings": []}
