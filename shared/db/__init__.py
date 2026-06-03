@@ -1,5 +1,5 @@
 from shared.db.models import Base, PullRequest, Finding, StylePattern
-from shared.db.session import get_db_session, create_db_engine, AsyncSessionLocal
+from shared.db.session import get_db_session, engine, async_session_factory
 
 __all__ = [
     "Base",
@@ -7,6 +7,6 @@ __all__ = [
     "Finding",
     "StylePattern",
     "get_db_session",
-    "create_db_engine",
-    "AsyncSessionLocal",
+    "engine",
+    "async_session_factory",
 ]

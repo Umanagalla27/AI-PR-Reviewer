@@ -1,7 +1,8 @@
 FROM python:3.11-slim as builder
 
 WORKDIR /app
-COPY pyproject.toml ./
+COPY pyproject.toml README.md ./
+RUN mkdir agents services shared workers
 # We can use pip to install the dependencies from pyproject.toml
 # In a real app we'd use poetry or hatch, but pip works with pyproject.toml
 RUN pip install .[dev]
