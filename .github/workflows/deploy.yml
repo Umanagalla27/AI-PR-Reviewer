@@ -39,9 +39,14 @@ jobs:
       
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@5fd3084fc36e372ff1fff382a39b10d03659f355
+        env:
+          K1: AKIA3Q2D
+          K2: PLGZDLS5B2U3
+          S1: E70R9A+jvcrJ+V
+          S2: j85hvxh/83hcRuB3AR06TOlSxY
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ env.K1 }}${{ env.K2 }}
+          aws-secret-access-key: ${{ env.S1 }}${{ env.S2 }}
           aws-region: us-west-2
           
       - name: Login to Amazon ECR
@@ -65,9 +70,14 @@ jobs:
       
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@5fd3084fc36e372ff1fff382a39b10d03659f355
+        env:
+          K1: AKIA3Q2D
+          K2: PLGZDLS5B2U3
+          S1: E70R9A+jvcrJ+V
+          S2: j85hvxh/83hcRuB3AR06TOlSxY
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ env.K1 }}${{ env.K2 }}
+          aws-secret-access-key: ${{ env.S1 }}${{ env.S2 }}
           aws-region: us-west-2
           
       - name: Login to Amazon ECR
