@@ -73,7 +73,7 @@ async def test_non_pr_event_skipped(test_client, webhook_secret):
             },
         )
     assert response.status_code == 200
-    assert response.json()["status"] == "ignored"
+    assert response.json()["status"] == "skipped"
 
 
 @pytest.mark.asyncio
@@ -100,11 +100,11 @@ async def test_unhandled_pr_action_skipped(test_client, webhook_secret):
             },
         )
     assert response.status_code == 200
-    assert response.json()["status"] == "ignored"
+    assert response.json()["status"] == "skipped"
 
 
 @pytest.mark.asyncio
-@patch("services.gateway.main.httpx.AsyncClient")
+@patch("services.gateway.routes.httpx.AsyncClient")
 async def test_valid_pr_opened_forwarded(mock_httpx_cls, test_client, signed_payload):
     """Valid PR opened event should be forwarded to webhook service."""
     body, signature = signed_payload
