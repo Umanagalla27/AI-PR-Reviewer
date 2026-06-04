@@ -24,14 +24,20 @@ def _template_summary(findings: list[dict]) -> str:
     """Generate a template-based summary without LLM (fallback)."""
     total = len(findings)
     if total == 0:
-        return "## AI Code Review Summary\n\n✅ **No issues found.** The code looks good!"
+        return (
+            "## AI Code Review Summary\n\n✅ **No issues found.** The code looks good!"
+        )
 
     # Count by severity
     severity_counts = Counter(f.get("severity", "info") for f in findings)
     agent_counts = Counter(f.get("agent", "unknown") for f in findings)
 
     # Count affected files
-    files = set(f.get("file_path", f.get("file", "")) for f in findings if f.get("file_path") or f.get("file"))
+    files = set(
+        f.get("file_path", f.get("file", ""))
+        for f in findings
+        if f.get("file_path") or f.get("file")
+    )
 
     lines = [
         "## AI Code Review Summary",
@@ -72,7 +78,12 @@ def _template_summary(findings: list[dict]) -> str:
     for severity in ["error", "warning", "info", "suggestion"]:
         count = severity_counts.get(severity, 0)
         if count > 0:
-            emoji = {"error": "🔴", "warning": "🟡", "info": "🔵", "suggestion": "💡"}.get(severity, "")
+            emoji = {
+                "error": "🔴",
+                "warning": "🟡",
+                "info": "🔵",
+                "suggestion": "💡",
+            }.get(severity, "")
             lines.append(f"- {emoji} **{severity.title()}**: {count}")
 
     lines.append("")
@@ -91,7 +102,9 @@ async def generate_summary(findings: list[dict]) -> str:
     settings = get_settings()
 
     if not findings:
-        return "## AI Code Review Summary\n\n✅ **No issues found.** The code looks good!"
+        return (
+            "## AI Code Review Summary\n\n✅ **No issues found.** The code looks good!"
+        )
 
     # Try LLM-generated summary
     try:

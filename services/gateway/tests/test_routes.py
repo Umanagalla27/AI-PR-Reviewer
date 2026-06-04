@@ -85,8 +85,13 @@ async def test_unhandled_pr_action_skipped(test_client, webhook_secret):
     """PR events with unhandled actions should be skipped."""
     payload = {
         "action": "labeled",
-        "pull_request": {"number": 1, "head": {"sha": "a"}, "base": {"sha": "b"},
-                         "user": {"login": "u"}, "merged": False},
+        "pull_request": {
+            "number": 1,
+            "head": {"sha": "a"},
+            "base": {"sha": "b"},
+            "user": {"login": "u"},
+            "merged": False,
+        },
         "repository": {"full_name": "o/r"},
         "installation": {"id": 1},
     }

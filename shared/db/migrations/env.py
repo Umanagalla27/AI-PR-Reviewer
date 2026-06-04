@@ -26,6 +26,7 @@ target_metadata = Base.metadata
 # Set the SQLAlchemy URL from settings
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
+
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""
     url = config.get_main_option("sqlalchemy.url")
@@ -67,6 +68,7 @@ async def run_async_migrations() -> None:
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
     asyncio.run(run_async_migrations())
+
 
 if context.is_offline_mode():
     run_migrations_offline()

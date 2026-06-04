@@ -42,9 +42,7 @@ class FileHunk:
 DIFF_HEADER_RE = re.compile(r"^diff --git a/(.+?) b/(.+)$")
 
 # Matches hunk header: @@ -old_start,old_lines +new_start,new_lines @@
-HUNK_HEADER_RE = re.compile(
-    r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(.*)$"
-)
+HUNK_HEADER_RE = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(.*)$")
 
 
 def parse_unified_diff(diff_text: str) -> list[FileHunk]:

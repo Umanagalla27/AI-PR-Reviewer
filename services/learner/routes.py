@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
+from typing import Any
 
 import structlog
 from fastapi import APIRouter, Depends
@@ -72,7 +73,9 @@ async def learn_from_merged_pr(
                 "agent": f.agent,
                 "file": f.file_path,
                 "line": f.line_number,
-                "severity": f.severity.value if hasattr(f.severity, "value") else f.severity,
+                "severity": f.severity.value
+                if hasattr(f.severity, "value")
+                else f.severity,
                 "message": f.message,
             }
             for f in findings
@@ -92,7 +95,7 @@ async def learn_from_merged_pr(
         diff_text = ""
 
     # ── Step 3: Extract patterns via GPT-4o-mini ────────────────────────────
-    patterns = []
+    patterns: list[Any] = []
 
     if diff_text or findings_data:
         try:
@@ -118,7 +121,7 @@ async def learn_from_merged_pr(
             parsed = json.loads(content)
 
             if isinstance(parsed, dict):
-                patterns = parsed.get("patterns", parsed.get("style_patterns", []))
+                patterns = parsed.get("patterns", parsed.get("style_patterns", []))  # type: ignore
             elif isinstance(parsed, list):
                 patterns = parsed
             else:
@@ -150,9 +153,9 @@ async def learn_from_merged_pr(
 
         if existing:
             # Increment frequency and update description
-            existing.frequency += 1
+            existing.frequency = int(existing.frequency) + 1  # type: ignore
             existing.description = description
-            existing.last_seen = datetime.now(timezone.utc)
+            existing.last_seen = datetime.now(timezone.utc)  # type: ignore
             logger.debug(
                 "pattern_updated",
                 pattern_type=pattern_type,

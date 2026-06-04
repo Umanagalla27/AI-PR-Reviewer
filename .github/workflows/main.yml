@@ -51,7 +51,8 @@ jobs:
         
     - name: Run mypy
       run: |
-        mypy shared agents services workers
+        python -m pip install mypy types-redis
+        python -m mypy shared agents services workers
         
     - name: Run Ruff (linting)
       run: |

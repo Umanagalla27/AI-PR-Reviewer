@@ -22,24 +22,25 @@ Respond with a JSON object containing a "findings" array. Each item must have:
 - suggestion (string or null)
 """
 
+
 async def style_agent(state: ReviewState) -> dict:
     """Style and convention analysis agent node."""
     diff = state["diff"]
     if not diff.strip():
         return {"style_findings": []}
-        
+
     patterns = state.get("style_patterns", [])
     patterns_str = json.dumps(patterns, indent=2)
-    
+
     user_content = f"Repo Style Patterns:\n{patterns_str}\n\nPlease review this diff for style issues:\n\n{diff}"
-    
+
     result = await call_llm(
         agent_name="style",
         system_prompt=STYLE_SYSTEM_PROMPT,
         user_content=user_content,
-        trace_id=state.get("langfuse_trace_id", "")
+        trace_id=state.get("langfuse_trace_id", ""),
     )
-    
+
     findings = []
     for item in result.get("findings", []):
         findings.append(
@@ -49,8 +50,8 @@ async def style_agent(state: ReviewState) -> dict:
                 line_number=item.get("line_number"),
                 severity=SeverityLevel(item.get("severity", "info")),
                 message=item.get("message", "No message provided"),
-                suggestion=item.get("suggestion")
+                suggestion=item.get("suggestion"),
             )
         )
-        
+
     return {"style_findings": findings}

@@ -4,6 +4,7 @@ from datetime import datetime
 from uuid import UUID
 from shared.db.models import SeverityLevel
 
+
 class FindingBase(BaseModel):
     agent: str
     file_path: str
@@ -12,8 +13,10 @@ class FindingBase(BaseModel):
     message: str
     suggestion: Optional[str] = None
 
+
 class FindingCreate(FindingBase):
     pass
+
 
 class FindingResponse(FindingBase):
     id: UUID
@@ -22,12 +25,15 @@ class FindingResponse(FindingBase):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class StylePatternBase(BaseModel):
     pattern_type: str
     description: str
 
+
 class StylePatternCreate(StylePatternBase):
     pass
+
 
 class StylePatternResponse(StylePatternBase):
     id: UUID

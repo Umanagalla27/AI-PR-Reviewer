@@ -22,28 +22,29 @@ Respond with a JSON object containing a "findings" array. Each item must have:
 - suggestion (string or null)
 """
 
+
 async def security_agent(state: ReviewState) -> dict:
     """Security analysis agent node."""
     diff = state["diff"]
     if not diff.strip():
         return {"security_findings": []}
-        
+
     user_content = f"Please review this diff for security issues:\n\n{diff}"
-    
+
     result = await call_llm(
         agent_name="security",
         system_prompt=SECURITY_SYSTEM_PROMPT,
         user_content=user_content,
-        trace_id=state.get("langfuse_trace_id", "")
+        trace_id=state.get("langfuse_trace_id", ""),
     )
-    
+
     findings = []
     for item in result.get("findings", []):
         owasp = item.get("owasp_category", "")
         msg = item.get("message", "No message provided")
         if owasp:
             msg = f"[{owasp}] {msg}"
-            
+
         findings.append(
             FindingCreate(
                 agent="security",
@@ -51,8 +52,8 @@ async def security_agent(state: ReviewState) -> dict:
                 line_number=item.get("line_number"),
                 severity=SeverityLevel(item.get("severity", "warning")),
                 message=msg,
-                suggestion=item.get("suggestion")
+                suggestion=item.get("suggestion"),
             )
         )
-        
+
     return {"security_findings": findings}

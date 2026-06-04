@@ -23,19 +23,15 @@ celery_app.conf.update(
     task_serializer="json",
     accept_content=["json"],
     result_serializer="json",
-
     # Timezone
     timezone="UTC",
     enable_utc=True,
-
     # Task settings
     task_track_started=True,
     task_acks_late=True,
     worker_prefetch_multiplier=1,
-
     # Result settings
     result_expires=3600,  # 1 hour
-
     # Task discovery
     task_routes={
         "workers.celery_app.tasks.review_pr": {"queue": "review"},
