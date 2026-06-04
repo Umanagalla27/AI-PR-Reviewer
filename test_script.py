@@ -4,6 +4,7 @@ import ast
 # Load secret from environment / repo secrets instead of hardcoding
 SECRET = os.environ.get("SECRET_KEY")
 
+
 def risky_func(user_input):
     """
     Safely parse Python literal values (numbers, strings, lists, dicts).
