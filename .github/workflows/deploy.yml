@@ -51,7 +51,7 @@ jobs:
 
       - name: Update Kubeconfig
         run: |
-          aws eks update-kubeconfig --name ai-reviewer-cluster --region us-east-1
+          aws eks update-kubeconfig --name codereview-cluster --region us-east-1
 
       - name: Update Deployments
         run: |
