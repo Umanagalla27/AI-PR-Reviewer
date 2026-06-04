@@ -73,7 +73,9 @@ async def learn_from_merged_pr(
                 "agent": f.agent,
                 "file": f.file_path,
                 "line": f.line_number,
-                "severity": f.severity.value if hasattr(f.severity, "value") else f.severity,
+                "severity": f.severity.value
+                if hasattr(f.severity, "value")
+                else f.severity,
                 "message": f.message,
             }
             for f in findings
@@ -119,7 +121,7 @@ async def learn_from_merged_pr(
             parsed = json.loads(content)
 
             if isinstance(parsed, dict):
-                patterns = parsed.get("patterns", parsed.get("style_patterns", [])) # type: ignore
+                patterns = parsed.get("patterns", parsed.get("style_patterns", []))  # type: ignore
             elif isinstance(parsed, list):
                 patterns = parsed
             else:
@@ -151,9 +153,9 @@ async def learn_from_merged_pr(
 
         if existing:
             # Increment frequency and update description
-            existing.frequency = int(existing.frequency) + 1 # type: ignore
+            existing.frequency = int(existing.frequency) + 1  # type: ignore
             existing.description = description
-            existing.last_seen = datetime.now(timezone.utc) # type: ignore
+            existing.last_seen = datetime.now(timezone.utc)  # type: ignore
             logger.debug(
                 "pattern_updated",
                 pattern_type=pattern_type,

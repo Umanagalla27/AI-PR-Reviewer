@@ -1,9 +1,8 @@
-
-services = ['webhook', 'orchestrator', 'reviewer', 'learner']
+services = ["webhook", "orchestrator", "reviewer", "learner"]
 for svc in services:
-    main_path = f'services/{svc}/main.py'
-    title = svc.capitalize() + ' Service'
-    
+    main_path = f"services/{svc}/main.py"
+    title = svc.capitalize() + " Service"
+
     new_content = f'''from fastapi import FastAPI
 from starlette_prometheus import metrics, PrometheusMiddleware
 from shared.observability import RequestIdMiddleware
@@ -21,6 +20,6 @@ async def health():
 
 app.include_router(router)
 '''
-    with open(main_path, 'w', encoding='utf-8') as f:
+    with open(main_path, "w", encoding="utf-8") as f:
         f.write(new_content)
-    print(f'Rewrote {main_path}')
+    print(f"Rewrote {main_path}")

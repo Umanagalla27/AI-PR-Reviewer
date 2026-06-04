@@ -20,21 +20,22 @@ Respond with a JSON object containing a "findings" array. Each item must have:
 - suggestion (string or null)
 """
 
+
 async def architecture_agent(state: ReviewState) -> dict:
     """Architecture analysis agent node."""
     diff = state["diff"]
     if not diff.strip():
         return {"arch_findings": []}
-        
+
     user_content = f"Please review this diff for architecture/design issues:\n\n{diff}"
-    
+
     result = await call_llm(
         agent_name="architecture",
         system_prompt=ARCH_SYSTEM_PROMPT,
         user_content=user_content,
-        trace_id=state.get("langfuse_trace_id", "")
+        trace_id=state.get("langfuse_trace_id", ""),
     )
-    
+
     findings = []
     for item in result.get("findings", []):
         findings.append(
@@ -44,8 +45,8 @@ async def architecture_agent(state: ReviewState) -> dict:
                 line_number=item.get("line_number"),
                 severity=SeverityLevel(item.get("severity", "info")),
                 message=item.get("message", "No message provided"),
-                suggestion=item.get("suggestion")
+                suggestion=item.get("suggestion"),
             )
         )
-        
+
     return {"arch_findings": findings}

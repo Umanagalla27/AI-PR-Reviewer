@@ -22,7 +22,8 @@ If you find no issues, return an empty array: []
 
 # ─── Static Analysis Agent ───────────────────────────────────────────────────
 
-STATIC_SYSTEM_PROMPT = """You are an expert static code analysis agent. Your job is to review
+STATIC_SYSTEM_PROMPT = (
+    """You are an expert static code analysis agent. Your job is to review
 code diffs and identify potential bugs, code quality issues, and maintainability problems.
 
 Focus areas:
@@ -38,7 +39,9 @@ Focus areas:
 
 Be precise with line numbers. Only flag issues in the ADDED lines (lines starting with +).
 Do not flag issues in removed lines or unchanged context lines.
-""" + JSON_OUTPUT_INSTRUCTIONS
+"""
+    + JSON_OUTPUT_INSTRUCTIONS
+)
 
 STATIC_USER_PROMPT = """Review this pull request diff for static analysis issues:
 
@@ -75,7 +78,7 @@ Each finding MUST include an "owasp_category" field (e.g., "A03: Injection").
 Only flag issues in ADDED lines.
 """ + JSON_OUTPUT_INSTRUCTIONS.replace(
     '"suggestion": string or null',
-    '"suggestion": string or null\n- "owasp_category": string — the OWASP category (e.g., "A03: Injection")'
+    '"suggestion": string or null\n- "owasp_category": string — the OWASP category (e.g., "A03: Injection")',
 )
 
 SECURITY_USER_PROMPT = """Review this pull request diff for security vulnerabilities:
@@ -91,7 +94,8 @@ Identify security vulnerabilities and return findings as a JSON array."""
 
 # ─── Style Agent ─────────────────────────────────────────────────────────────
 
-STYLE_SYSTEM_PROMPT = """You are an expert code style review agent. Your job is to review code diffs
+STYLE_SYSTEM_PROMPT = (
+    """You are an expert code style review agent. Your job is to review code diffs
 for consistency with the project's coding standards and best practices.
 
 Focus areas:
@@ -106,7 +110,9 @@ Focus areas:
 - Comment quality (no obvious comments, explain "why" not "what")
 
 Only flag issues in ADDED lines.
-""" + JSON_OUTPUT_INSTRUCTIONS
+"""
+    + JSON_OUTPUT_INSTRUCTIONS
+)
 
 STYLE_USER_PROMPT_NO_PATTERNS = """Review this pull request diff for code style issues:
 
@@ -136,7 +142,8 @@ Return findings as a JSON array."""
 
 # ─── Architecture Agent ──────────────────────────────────────────────────────
 
-ARCHITECTURE_SYSTEM_PROMPT = """You are an expert software architecture review agent. Your job is to
+ARCHITECTURE_SYSTEM_PROMPT = (
+    """You are an expert software architecture review agent. Your job is to
 review code diffs for architectural quality and design pattern adherence.
 
 Focus areas:
@@ -165,7 +172,9 @@ Focus areas:
   * Long methods (>50 lines)
 
 Only flag issues in ADDED/MODIFIED code.
-""" + JSON_OUTPUT_INSTRUCTIONS
+"""
+    + JSON_OUTPUT_INSTRUCTIONS
+)
 
 ARCHITECTURE_USER_PROMPT = """Review this pull request diff for architectural and design issues:
 

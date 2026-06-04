@@ -12,28 +12,31 @@ async def test_static_agent_parses_findings(sample_state, mock_openai_client):
     """Static agent should parse GPT JSON response into structured findings."""
     client, make_response = mock_openai_client
 
-    findings_json = json.dumps({
-        "findings": [
-            {
-                "file_path": "app/main.py",
-                "line": 8,
-                "severity": "warning",
-                "message": "Unused import: os",
-                "suggestion": "Remove the unused import"
-            },
-            {
-                "file_path": "app/main.py",
-                "line": 10,
-                "severity": "error",
-                "message": "subprocess.run with shell=True is dangerous",
-                "suggestion": "Use a list of arguments instead"
-            }
-        ]
-    })
+    findings_json = json.dumps(
+        {
+            "findings": [
+                {
+                    "file_path": "app/main.py",
+                    "line": 8,
+                    "severity": "warning",
+                    "message": "Unused import: os",
+                    "suggestion": "Remove the unused import",
+                },
+                {
+                    "file_path": "app/main.py",
+                    "line": 10,
+                    "severity": "error",
+                    "message": "subprocess.run with shell=True is dangerous",
+                    "suggestion": "Use a list of arguments instead",
+                },
+            ]
+        }
+    )
 
     client.chat.completions.create.return_value = make_response(findings_json)
 
     from agents.static_agent import static_agent
+
     result = await static_agent(sample_state)
 
     assert "static_findings" in result
@@ -51,6 +54,7 @@ async def test_static_agent_handles_empty_response(sample_state, mock_openai_cli
     client.chat.completions.create.return_value = make_response('{"findings": []}')
 
     from agents.static_agent import static_agent
+
     result = await static_agent(sample_state)
 
     assert result["static_findings"] == []
@@ -63,6 +67,7 @@ async def test_static_agent_handles_malformed_json(sample_state, mock_openai_cli
     client.chat.completions.create.return_value = make_response("not valid json {{{")
 
     from agents.static_agent import static_agent
+
     result = await static_agent(sample_state)
 
     # Should return empty findings, not crash
@@ -76,6 +81,7 @@ async def test_static_agent_handles_api_error(sample_state, mock_openai_client):
     client.chat.completions.create.side_effect = Exception("API rate limit")
 
     from agents.static_agent import static_agent
+
     result = await static_agent(sample_state)
 
     assert result["static_findings"] == []

@@ -20,21 +20,22 @@ Respond with a JSON object containing a "findings" array. Each item must have:
 - suggestion (string or null)
 """
 
+
 async def static_agent(state: ReviewState) -> dict:
     """Static analysis agent node."""
     diff = state["diff"]
     if not diff.strip():
         return {"static_findings": []}
-        
+
     user_content = f"Please review this diff for static analysis issues:\n\n{diff}"
-    
+
     result = await call_llm(
         agent_name="static",
         system_prompt=STATIC_SYSTEM_PROMPT,
         user_content=user_content,
-        trace_id=state.get("langfuse_trace_id", "")
+        trace_id=state.get("langfuse_trace_id", ""),
     )
-    
+
     findings = []
     for item in result.get("findings", []):
         findings.append(
@@ -44,8 +45,8 @@ async def static_agent(state: ReviewState) -> dict:
                 line_number=item.get("line_number"),
                 severity=SeverityLevel(item.get("severity", "info")),
                 message=item.get("message", "No message provided"),
-                suggestion=item.get("suggestion")
+                suggestion=item.get("suggestion"),
             )
         )
-        
+
     return {"static_findings": findings}

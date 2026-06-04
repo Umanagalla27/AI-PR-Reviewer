@@ -17,10 +17,7 @@ class TestMessageSimilarity:
         assert compute_similarity("foo", "barbaz") < 0.5
 
     def test_similar_messages(self):
-        sim = compute_similarity(
-            "Unused import: os",
-            "Unused import: os module"
-        )
+        sim = compute_similarity("Unused import: os", "Unused import: os module")
         assert sim >= 0.7
 
     def test_empty_messages(self):
@@ -33,10 +30,20 @@ class TestDeduplication:
 
     def test_removes_exact_duplicates_same_line(self):
         findings = [
-            FindingCreate(file_path="a.py", line_number=10, severity="warning",
-             message="Unused import os", agent="static"),
-            FindingCreate(file_path="a.py", line_number=10, severity="error",
-             message="Unused import os", agent="style"),
+            FindingCreate(
+                file_path="a.py",
+                line_number=10,
+                severity="warning",
+                message="Unused import os",
+                agent="static",
+            ),
+            FindingCreate(
+                file_path="a.py",
+                line_number=10,
+                severity="error",
+                message="Unused import os",
+                agent="style",
+            ),
         ]
         result = deduplicate_findings(findings)
         # Should keep only one, preferring the higher severity (error)
@@ -45,30 +52,60 @@ class TestDeduplication:
 
     def test_keeps_different_files(self):
         findings = [
-            FindingCreate(file_path="a.py", line_number=10, severity="warning",
-             message="Unused import", agent="static"),
-            FindingCreate(file_path="b.py", line_number=10, severity="warning",
-             message="Unused import", agent="static"),
+            FindingCreate(
+                file_path="a.py",
+                line_number=10,
+                severity="warning",
+                message="Unused import",
+                agent="static",
+            ),
+            FindingCreate(
+                file_path="b.py",
+                line_number=10,
+                severity="warning",
+                message="Unused import",
+                agent="static",
+            ),
         ]
         result = deduplicate_findings(findings)
         assert len(result) == 2
 
     def test_keeps_different_lines(self):
         findings = [
-            FindingCreate(file_path="a.py", line_number=10, severity="warning",
-             message="Unused import", agent="static"),
-            FindingCreate(file_path="a.py", line_number=20, severity="warning",
-             message="Unused import", agent="static"),
+            FindingCreate(
+                file_path="a.py",
+                line_number=10,
+                severity="warning",
+                message="Unused import",
+                agent="static",
+            ),
+            FindingCreate(
+                file_path="a.py",
+                line_number=20,
+                severity="warning",
+                message="Unused import",
+                agent="static",
+            ),
         ]
         result = deduplicate_findings(findings)
         assert len(result) == 2
 
     def test_null_line_numbers_not_deduplicated(self):
         findings = [
-            FindingCreate(file_path="a.py", line_number=None, severity="info",
-             message="General issue", agent="arch"),
-            FindingCreate(file_path="a.py", line_number=None, severity="info",
-             message="General issue", agent="style"),
+            FindingCreate(
+                file_path="a.py",
+                line_number=None,
+                severity="info",
+                message="General issue",
+                agent="arch",
+            ),
+            FindingCreate(
+                file_path="a.py",
+                line_number=None,
+                severity="info",
+                message="General issue",
+                agent="style",
+            ),
         ]
         result = deduplicate_findings(findings)
         # line_number=None should not be deduplicated
@@ -81,20 +118,40 @@ class TestMergerNode:
     def test_combines_all_agents(self):
         state = {
             "static_findings": [
-                FindingCreate(agent="static", file_path="a.py", line_number=1,
-                 severity="warning", message="msg1")
+                FindingCreate(
+                    agent="static",
+                    file_path="a.py",
+                    line_number=1,
+                    severity="warning",
+                    message="msg1",
+                )
             ],
             "security_findings": [
-                FindingCreate(agent="security", file_path="b.py", line_number=2,
-                 severity="error", message="msg2")
+                FindingCreate(
+                    agent="security",
+                    file_path="b.py",
+                    line_number=2,
+                    severity="error",
+                    message="msg2",
+                )
             ],
             "style_findings": [
-                FindingCreate(agent="style", file_path="c.py", line_number=3,
-                 severity="suggestion", message="msg3")
+                FindingCreate(
+                    agent="style",
+                    file_path="c.py",
+                    line_number=3,
+                    severity="suggestion",
+                    message="msg3",
+                )
             ],
             "arch_findings": [
-                FindingCreate(agent="architecture", file_path="d.py", line_number=4,
-                 severity="info", message="msg4")
+                FindingCreate(
+                    agent="architecture",
+                    file_path="d.py",
+                    line_number=4,
+                    severity="info",
+                    message="msg4",
+                )
             ],
         }
         result = merger_node(state)
@@ -103,17 +160,32 @@ class TestMergerNode:
     def test_sorts_by_severity(self):
         state = {
             "static_findings": [
-                FindingCreate(agent="static", file_path="a.py", line_number=1,
-                 severity="suggestion", message="low"),
+                FindingCreate(
+                    agent="static",
+                    file_path="a.py",
+                    line_number=1,
+                    severity="suggestion",
+                    message="low",
+                ),
             ],
             "security_findings": [
-                FindingCreate(agent="security", file_path="b.py", line_number=2,
-                 severity="error", message="high"),
+                FindingCreate(
+                    agent="security",
+                    file_path="b.py",
+                    line_number=2,
+                    severity="error",
+                    message="high",
+                ),
             ],
             "style_findings": [],
             "arch_findings": [
-                FindingCreate(agent="arch", file_path="c.py", line_number=3,
-                 severity="warning", message="medium"),
+                FindingCreate(
+                    agent="arch",
+                    file_path="c.py",
+                    line_number=3,
+                    severity="warning",
+                    message="medium",
+                ),
             ],
         }
         result = merger_node(state)
@@ -123,13 +195,23 @@ class TestMergerNode:
     def test_caps_at_50(self):
         state = {
             "static_findings": [
-                FindingCreate(agent="static", file_path=f"file_{i}.py",
-                 line_number=i, severity="info", message=f"msg {i}")
+                FindingCreate(
+                    agent="static",
+                    file_path=f"file_{i}.py",
+                    line_number=i,
+                    severity="info",
+                    message=f"msg {i}",
+                )
                 for i in range(30)
             ],
             "security_findings": [
-                FindingCreate(agent="security", file_path=f"sec_{i}.py",
-                 line_number=i, severity="warning", message=f"sec {i}")
+                FindingCreate(
+                    agent="security",
+                    file_path=f"sec_{i}.py",
+                    line_number=i,
+                    severity="warning",
+                    message=f"sec {i}",
+                )
                 for i in range(30)
             ],
             "style_findings": [],

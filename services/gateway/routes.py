@@ -87,10 +87,14 @@ async def receive_webhook(
     raw_body = await request.body()
 
     # ── Step 1: Validate signature ──────────────────────────────────────────
-    if not _verify_signature(raw_body, x_hub_signature_256, settings.GITHUB_WEBHOOK_SECRET):
+    if not _verify_signature(
+        raw_body, x_hub_signature_256, settings.GITHUB_WEBHOOK_SECRET
+    ):
         # avoid using kwarg name `event` which can collide with structlog internals
         logger.warning("webhook_signature_invalid", github_event=x_github_event)
-        github_webhooks_received_total.labels(service="gateway", status="invalid_signature").inc()
+        github_webhooks_received_total.labels(
+            service="gateway", status="invalid_signature"
+        ).inc()
         raise HTTPException(status_code=401, detail="Invalid webhook signature")
 
     github_webhooks_received_total.labels(service="gateway", status="received").inc()
@@ -98,7 +102,10 @@ async def receive_webhook(
     # ── Step 2: Filter event type ───────────────────────────────────────────
     if x_github_event != "pull_request":
         logger.debug("webhook_event_skipped", github_event=x_github_event)
-        return {"status": "skipped", "reason": f"event type '{x_github_event}' not handled"}
+        return {
+            "status": "skipped",
+            "reason": f"event type '{x_github_event}' not handled",
+        }
 
     # Parse JSON consistently from the raw bytes we already read
     try:

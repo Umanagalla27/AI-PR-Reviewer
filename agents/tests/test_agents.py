@@ -6,6 +6,7 @@ from shared.schemas.finding import FindingCreate
 from shared.db.models import SeverityLevel
 from unittest.mock import patch, AsyncMock
 
+
 @pytest.mark.asyncio
 async def test_static_agent_empty_diff():
     state: ReviewState = {
@@ -20,11 +21,12 @@ async def test_static_agent_empty_diff():
         "style_findings": [],
         "arch_findings": [],
         "merged_findings": [],
-        "langfuse_trace_id": ""
+        "langfuse_trace_id": "",
     }
-    
+
     result = await static_agent(state)
     assert result["static_findings"] == []
+
 
 @pytest.mark.asyncio
 @patch("agents.static_agent.call_llm", new_callable=AsyncMock)
@@ -36,11 +38,11 @@ async def test_static_agent_with_findings(mock_call_llm):
                 "line_number": 10,
                 "severity": "error",
                 "message": "Undefined variable",
-                "suggestion": "Define it"
+                "suggestion": "Define it",
             }
         ]
     }
-    
+
     state: ReviewState = {
         "repo": "owner/repo",
         "pr_number": 1,
@@ -53,14 +55,15 @@ async def test_static_agent_with_findings(mock_call_llm):
         "style_findings": [],
         "arch_findings": [],
         "merged_findings": [],
-        "langfuse_trace_id": ""
+        "langfuse_trace_id": "",
     }
-    
+
     result = await static_agent(state)
     findings = result["static_findings"]
     assert len(findings) == 1
     assert findings[0].file_path == "main.py"
     assert findings[0].severity == SeverityLevel.error
+
 
 def test_merger_node_deduplication():
     f1 = FindingCreate(
@@ -69,9 +72,9 @@ def test_merger_node_deduplication():
         line_number=10,
         severity=SeverityLevel.info,
         message="Use single quotes",
-        suggestion=None
+        suggestion=None,
     )
-    
+
     # Duplicate of f1 but higher severity
     f2 = FindingCreate(
         agent="style",
@@ -79,9 +82,9 @@ def test_merger_node_deduplication():
         line_number=10,
         severity=SeverityLevel.warning,
         message="Use single quotes please",
-        suggestion=None
+        suggestion=None,
     )
-    
+
     # Different finding
     f3 = FindingCreate(
         agent="security",
@@ -89,9 +92,9 @@ def test_merger_node_deduplication():
         line_number=5,
         severity=SeverityLevel.error,
         message="Hardcoded secret",
-        suggestion=None
+        suggestion=None,
     )
-    
+
     state: ReviewState = {
         "repo": "owner/repo",
         "pr_number": 1,
@@ -104,17 +107,17 @@ def test_merger_node_deduplication():
         "style_findings": [f2],
         "arch_findings": [],
         "merged_findings": [],
-        "langfuse_trace_id": ""
+        "langfuse_trace_id": "",
     }
-    
+
     result = merger_node(state)
     merged = result["merged_findings"]
-    
+
     assert len(merged) == 2
     # Ensure error is first
     assert merged[0].severity == SeverityLevel.error
     assert merged[0].file_path == "auth.py"
-    
+
     # Ensure warning replaces info due to deduplication
     assert merged[1].severity == SeverityLevel.warning
     assert merged[1].agent == "style"
