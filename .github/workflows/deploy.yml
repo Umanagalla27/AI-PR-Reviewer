@@ -37,6 +37,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: infra/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -52,11 +53,13 @@ jobs:
         run: |
           aws eks update-kubeconfig --name ai-reviewer-cluster --region us-east-1
 
-      - name: Restart Deployments
+      - name: Update Deployments
         run: |
-          kubectl rollout restart deployment celery-worker -n codereview
-          kubectl rollout restart deployment gateway -n codereview
-          kubectl rollout restart deployment webhook -n codereview
-          kubectl rollout restart deployment orchestrator -n codereview
-          kubectl rollout restart deployment reviewer -n codereview
-          kubectl rollout restart deployment learner -n codereview
+          IMAGE="ghcr.io/${{ github.repository_owner }}/ai-pr-reviewer:main"
+          IMAGE=$(echo $IMAGE | tr '[:upper:]' '[:lower:]')
+          kubectl set image deployment/celery-worker celery-worker=$IMAGE -n codereview
+          kubectl set image deployment/gateway gateway=$IMAGE -n codereview
+          kubectl set image deployment/webhook webhook=$IMAGE -n codereview
+          kubectl set image deployment/orchestrator orchestrator=$IMAGE -n codereview
+          kubectl set image deployment/reviewer reviewer=$IMAGE -n codereview
+          kubectl set image deployment/learner learner=$IMAGE -n codereview
