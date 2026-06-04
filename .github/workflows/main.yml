@@ -45,6 +45,16 @@ jobs:
         python -m pip install --upgrade pip
         pip install -e ".[dev]"
         
+    - name: Fail on NUL bytes in Python files
+      run: |
+        python - <<'PY'
+        import sys, pathlib
+        bad=[str(p) for p in pathlib.Path('.').rglob('*.py') if b'\x00' in p.read_bytes()]
+        if bad:
+            print('Files containing NUL bytes:', *bad, sep='\n')
+            sys.exit(1)
+        PY
+        
     - name: Run Pytest
       run: |
         pytest --cov=. --cov-report=xml
