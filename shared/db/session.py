@@ -1,10 +1,10 @@
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Any
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from shared.config.settings import settings
 import contextlib
 
 # Configure engine args dynamically based on DB type
-engine_kwargs = {
+engine_kwargs: dict[str, Any] = {
     "pool_pre_ping": True,
     "echo": False
 }

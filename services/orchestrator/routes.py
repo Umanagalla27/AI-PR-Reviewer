@@ -126,7 +126,7 @@ async def start_review(
             try:
                 severity_enum = Severity(severity_value)
             except ValueError:
-                severity_enum = Severity.INFO
+                severity_enum = Severity.info
 
             finding = Finding(
                 id=uuid.uuid4(),

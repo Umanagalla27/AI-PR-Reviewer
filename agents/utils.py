@@ -29,9 +29,9 @@ async def call_llm(
     ]
     
     try:
-        response = await client.chat.completions.create(
+        response = await client.chat.completions.create( # type: ignore
             model=settings.OPENAI_MODEL,
-            messages=messages,
+            messages=messages, # type: ignore
             temperature=0.1,
             response_format={"type": "json_object"}
         )
@@ -40,7 +40,7 @@ async def call_llm(
         usage = response.usage
         
         if trace_id:
-            langfuse.generation(
+            langfuse.generation( # type: ignore
                 trace_id=trace_id,
                 name=f"{agent_name}_review",
                 model=settings.OPENAI_MODEL,

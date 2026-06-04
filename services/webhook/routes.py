@@ -59,16 +59,16 @@ async def process_pr(
             pr_id=str(existing.id),
             status=existing.status.value,
         )
-        return PRProcessResponse(pr_id=existing.id, status="skipped")
+        return PRProcessResponse(pr_id=existing.id, status="skipped") # type: ignore
 
     # ── Step 2: Insert new PullRequest ──────────────────────────────────────
     pr_id = uuid.uuid4()
 
     if existing and existing.status == PRStatus.failed:
         # Reuse existing row, reset status
-        existing.status = PRStatus.pending
-        existing.updated_at = datetime.now(timezone.utc)
-        pr_id = existing.id
+        existing.status = PRStatus.pending # type: ignore
+        existing.updated_at = datetime.now(timezone.utc) # type: ignore
+        pr_id = existing.id # type: ignore
         logger.info("pr_retry_after_failure", pr_id=str(pr_id))
     else:
         pr = PullRequest(

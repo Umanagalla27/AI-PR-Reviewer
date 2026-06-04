@@ -1,11 +1,13 @@
 import enum
 import uuid
+from typing import Any
 from datetime import datetime
 from sqlalchemy import Column, String, Integer, DateTime, Enum, ForeignKey, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import DeclarativeBase, relationship
 
-Base = declarative_base()
+class Base(DeclarativeBase):
+    pass
 
 class PRStatus(str, enum.Enum):
     pending = "pending"
@@ -29,7 +31,7 @@ class PullRequest(Base):
     base_sha = Column(String(40), nullable=False)
     author = Column(String, nullable=False)
     installation_id = Column(Integer, nullable=True)
-    status = Column(Enum(PRStatus), default=PRStatus.pending, nullable=False)
+    status: Any = Column(Enum(PRStatus), default=PRStatus.pending, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     
@@ -47,7 +49,7 @@ class Finding(Base):
     agent = Column(String, nullable=False) # "static", "security", "style", "architecture"
     file_path = Column(String, nullable=False)
     line_number = Column(Integer, nullable=True)
-    severity = Column(Enum(SeverityLevel), nullable=False)
+    severity: Any = Column(Enum(SeverityLevel), nullable=False)
     message = Column(Text, nullable=False)
     suggestion = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

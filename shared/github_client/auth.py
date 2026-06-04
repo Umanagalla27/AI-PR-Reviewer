@@ -5,7 +5,7 @@ from shared.config.settings import settings
 
 # Cache installation tokens
 # Key: installation_id, Value: (token_string, expires_at_timestamp)
-token_cache = {}
+token_cache: dict[int, tuple[str, float]] = {}
 
 def generate_jwt() -> str:
     """Generates a GitHub App JWT."""
