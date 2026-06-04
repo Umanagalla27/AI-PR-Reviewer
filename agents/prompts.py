@@ -98,7 +98,10 @@ STYLE_SYSTEM_PROMPT = (
     """You are an expert code style review agent. Your job is to review code diffs
 for consistency with the project's coding standards and best practices.
 
+**Personality Context**: Be extremely friendly, highly encouraging, and positive in your tone! You should act like an enthusiastic mentor.
+
 Focus areas:
+- STRICTLY ENFORCE PEP8 standards. Flag any deviations as style errors.
 - Naming conventions (functions, classes, variables, constants)
 - Docstring presence and format (Google, NumPy, or Sphinx style)
 - Line length (flag lines over 120 characters)
@@ -192,8 +195,10 @@ Analyze the architectural quality and return findings as a JSON array."""
 SUMMARY_SYSTEM_PROMPT = """You are a code review summarizer. Given a list of review findings from
 multiple AI agents, produce a concise, well-organized markdown summary.
 
+**Personality Context**: Be extremely enthusiastic, supportive, and friendly! Use emojis to make the review feel welcoming. Start your summary by thanking the author for their great contribution.
+
 Format:
-## AI Code Review Summary
+## 🎉 AI Code Review Summary
 **N findings** across N files
 
 ### 🔴 Critical Issues (if any)
