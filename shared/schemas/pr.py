@@ -57,3 +57,14 @@ class PullRequestEvent(BaseModel):
     number: int
     pull_request: dict
     repository: dict
+
+class CommentProcessRequest(BaseModel):
+    repo_full_name: str
+    pr_number: int
+    comment_body: str
+    comment_id: int
+    author: str
+    installation_id: int
+
+class CommentProcessResponse(BaseModel):
+    status: str

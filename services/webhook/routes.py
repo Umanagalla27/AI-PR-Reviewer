@@ -21,8 +21,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.db.models import PRStatus, PullRequest
 from shared.db.session import get_db_session
-from shared.schemas.pr import PRProcessRequest, PRProcessResponse
-from workers.celery_app.tasks import review_pr
+from shared.schemas.pr import (
+    PRProcessRequest,
+    PRProcessResponse,
+    CommentProcessRequest,
+    CommentProcessResponse,
+)
+from workers.celery_app.tasks import review_pr, process_chat_comment
 
 logger = structlog.get_logger(__name__)
 
@@ -105,3 +110,44 @@ async def process_pr(
         return PRProcessResponse(pr_id=pr_id, status="queued_with_warning")
 
     return PRProcessResponse(pr_id=pr_id, status="queued")
+
+@router.post("/pr/comment", response_model=CommentProcessResponse)
+async def process_comment(
+    request: CommentProcessRequest,
+    db: AsyncSession = Depends(get_db_session),
+):
+    """
+    Process a validated issue_comment webhook event.
+    Only triggers if the comment starts with '@ai-reviewer'.
+    """
+    structlog.contextvars.bind_contextvars(
+        repo=request.repo_full_name,
+        pr_number=request.pr_number,
+        comment_id=request.comment_id,
+    )
+
+    body = request.comment_body.strip()
+    
+    if not body.startswith("@ai-reviewer"):
+        logger.info("ignored_comment_no_prefix")
+        return CommentProcessResponse(status="skipped_no_prefix")
+
+    # Make sure PR exists in our DB, if we care. 
+    # For a chatbot, it doesn't strictly have to exist in our DB if we just use Github API.
+    # But it's good practice. We'll just dispatch the celery task directly.
+
+    try:
+        process_chat_comment.delay(
+            repo=request.repo_full_name,
+            pr_number=request.pr_number,
+            comment_body=body,
+            comment_id=request.comment_id,
+            author=request.author,
+            installation_id=request.installation_id,
+        )
+        logger.info("chat_comment_task_enqueued")
+    except Exception as exc:
+        logger.error("celery_enqueue_error", error=str(exc))
+        return CommentProcessResponse(status="queued_with_warning")
+
+    return CommentProcessResponse(status="queued")

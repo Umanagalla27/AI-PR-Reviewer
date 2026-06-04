@@ -176,3 +176,20 @@ class GitHubClient:
             json={"labels": [label]},
         )
         return response.json()
+
+    async def get_issue_comments(self, repo: str, issue_number: int) -> list[dict]:
+        """Get all comments on an issue or PR."""
+        response = await self._request(
+            "GET",
+            f"/repos/{repo}/issues/{issue_number}/comments",
+        )
+        return response.json()
+
+    async def post_issue_comment(self, repo: str, issue_number: int, body: str) -> dict:
+        """Post a general comment to an issue or PR."""
+        response = await self._request(
+            "POST",
+            f"/repos/{repo}/issues/{issue_number}/comments",
+            json={"body": body},
+        )
+        return response.json()

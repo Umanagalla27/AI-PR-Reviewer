@@ -102,3 +102,52 @@ def learn_pr(self, repo_full_name: str, pr_number: int, installation_id: int):
     except httpx.HTTPError as exc:
         countdown = 60 * (2**self.request.retries)
         self.retry(exc=exc, countdown=countdown)
+
+
+@celery_app.task(bind=True, max_retries=3)
+def process_chat_comment(
+    self,
+    repo: str,
+    pr_number: int,
+    comment_body: str,
+    comment_id: int,
+    author: str,
+    installation_id: int,
+):
+    logger.info("starting_chat_comment_task", repo=repo, pr_number=pr_number)
+
+    from shared.github_client.auth import get_installation_token
+    from shared.github_client.client import GitHubClient
+    from agents.chat_agent import run_chat_agent
+
+    async def _handle_comment():
+        token = await get_installation_token(installation_id)
+        gh = GitHubClient(token)
+
+        # 1. Fetch Diff
+        diff = await gh.fetch_pr_diff(repo, pr_number)
+
+        # 2. Fetch recent comments (last 10)
+        all_comments = await gh.get_issue_comments(repo, pr_number)
+        recent_comments = all_comments[-10:] if len(all_comments) > 10 else all_comments
+
+        # 3. Generate response using ChatAgent
+        reply_body = await run_chat_agent(
+            diff=diff,
+            recent_comments=recent_comments,
+            new_comment=comment_body,
+        )
+
+        # 4. Post response
+        await gh.post_issue_comment(repo, pr_number, body=reply_body)
+
+    try:
+        asyncio.run(_handle_comment())
+        logger.info("completed_chat_comment_task", repo=repo, pr_number=pr_number)
+    except Exception as exc:
+        logger.error("chat_comment_task_failed", error=str(exc))
+        countdown = 60 * (2**self.request.retries)
+        try:
+            self.retry(exc=exc, countdown=countdown)
+        except self.MaxRetriesExceededError:
+            raise exc
