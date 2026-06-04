@@ -119,7 +119,7 @@ async def learn_from_merged_pr(
             parsed = json.loads(content)
 
             if isinstance(parsed, dict):
-                patterns = parsed.get("patterns", parsed.get("style_patterns", []))
+                patterns = parsed.get("patterns", parsed.get("style_patterns", [])) # type: ignore
             elif isinstance(parsed, list):
                 patterns = parsed
             else:

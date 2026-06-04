@@ -44,7 +44,7 @@ def deduplicate_findings(findings: List[FindingCreate]) -> List[FindingCreate]:
         # Sort group by severity so we keep the most severe one when deduplicating
         group_findings.sort(key=lambda x: get_severity_weight(x.severity), reverse=True)
         
-        unique_for_group = []
+        unique_for_group: List[FindingCreate] = []
         for f in group_findings:
             is_duplicate = False
             for u in unique_for_group:
