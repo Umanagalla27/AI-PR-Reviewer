@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -36,14 +35,14 @@ async def test_security_agent_parses_findings(sample_state, mock_openai_client):
 
     client.chat.completions.create.return_value = make_response(findings_json)
 
-    from agents.security_agent import security_review_node
-    result = await security_review_node(sample_state)
+    from agents.security_agent import security_agent
+    result = await security_agent(sample_state)
 
     assert len(result["security_findings"]) == 2
-    assert result["security_findings"][0]["agent"] == "security"
+    assert result["security_findings"][0].agent == "security"
     # OWASP category should be prepended to the message
-    assert "A03: Injection" in result["security_findings"][0]["message"]
-    assert "A02: Cryptographic Failures" in result["security_findings"][1]["message"]
+    assert "A03: Injection" in result["security_findings"][0].message
+    assert "A02: Cryptographic Failures" in result["security_findings"][1].message
 
 
 @pytest.mark.asyncio
@@ -52,7 +51,7 @@ async def test_security_agent_handles_no_vulnerabilities(sample_state, mock_open
     client, make_response = mock_openai_client
     client.chat.completions.create.return_value = make_response('{"findings": []}')
 
-    from agents.security_agent import security_review_node
-    result = await security_review_node(sample_state)
+    from agents.security_agent import security_agent
+    result = await security_agent(sample_state)
 
     assert result["security_findings"] == []

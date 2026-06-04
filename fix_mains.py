@@ -1,4 +1,3 @@
-import os
 
 services = ['webhook', 'orchestrator', 'reviewer', 'learner']
 for svc in services:

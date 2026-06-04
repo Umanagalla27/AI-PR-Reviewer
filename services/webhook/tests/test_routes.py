@@ -8,7 +8,6 @@ import os
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
 
 import uuid
-from datetime import datetime, timezone
 import pytest
 from httpx import ASGITransport, AsyncClient
 

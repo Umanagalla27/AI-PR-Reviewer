@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from typing import Optional, List
+from pydantic import BaseModel, ConfigDict
+from typing import Optional
 from datetime import datetime
 from uuid import UUID
 from shared.db.models import SeverityLevel
@@ -20,8 +20,7 @@ class FindingResponse(FindingBase):
     pr_id: UUID
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class StylePatternBase(BaseModel):
     pattern_type: str
@@ -36,5 +35,4 @@ class StylePatternResponse(StylePatternBase):
     frequency: int
     last_seen: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
