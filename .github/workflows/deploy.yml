@@ -39,7 +39,9 @@ jobs:
           context: .
           file: infra/Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/ai-pr-reviewer:main
+            ghcr.io/${{ github.repository_owner }}/ai-pr-reviewer:${{ github.sha }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Configure AWS Credentials
@@ -55,7 +57,7 @@ jobs:
 
       - name: Update Deployments
         run: |
-          IMAGE="ghcr.io/${{ github.repository_owner }}/ai-pr-reviewer:main"
+          IMAGE="ghcr.io/${{ github.repository_owner }}/ai-pr-reviewer:${{ github.sha }}"
           IMAGE=$(echo $IMAGE | tr '[:upper:]' '[:lower:]')
           kubectl apply -f infra/k8s/chatbot.yml
           kubectl set image deployment/celery-worker celery-worker=$IMAGE -n codereview
