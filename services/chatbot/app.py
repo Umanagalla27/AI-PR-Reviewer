@@ -37,12 +37,11 @@ if prompt := st.chat_input("Ask a question about your repositories... (e.g. 'Wha
     # Generate response
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            response = st.session_state.agent_executor.invoke({
-                "input": prompt,
-                "chat_history": st.session_state.chat_history[:-1]  # Exclude the current message
-            })
-            answer = response["output"]
+            messages = st.session_state.chat_history[:-1] + [user_msg]
+            response = st.session_state.agent_executor.invoke({"messages": messages})
+            # The response is a state dict, the last message is the AI response
+            answer = response["messages"][-1].content
             st.markdown(answer)
             
     # Add AI message to state
-    st.session_state.chat_history.append(AIMessage(content=answer))
+    st.session_state.chat_history.append(response["messages"][-1])

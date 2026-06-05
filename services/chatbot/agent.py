@@ -2,8 +2,7 @@ import asyncio
 from typing import List, Dict, Any
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
-from langchain.agents import AgentExecutor, create_tool_calling_agent
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langgraph.prebuilt import create_react_agent
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from shared.config.settings import get_settings
@@ -76,8 +75,8 @@ def get_style_patterns(repo_full_name: str) -> List[Dict[str, Any]]:
             ]
     return asyncio.run(_run())
 
-def get_chatbot_agent() -> AgentExecutor:
-    """Initialize the LangChain agent with our database tools."""
+def get_chatbot_agent():
+    """Initialize the LangGraph agent with our database tools."""
     settings = get_settings()
     llm = ChatOpenAI(
         model=settings.OPENAI_MODEL_NAME,
@@ -87,13 +86,7 @@ def get_chatbot_agent() -> AgentExecutor:
     
     tools = [get_recent_prs, get_pr_findings, get_style_patterns]
     
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", "You are the AI-PR-Reviewer Chatbot. You can help users query their database for past pull requests, AI review findings, and learned coding style patterns. Always format your responses clearly in Markdown."),
-        MessagesPlaceholder("chat_history", optional=True),
-        ("human", "{input}"),
-        MessagesPlaceholder("agent_scratchpad"),
-    ])
+    system_prompt = "You are the AI-PR-Reviewer Chatbot. You can help users query their database for past pull requests, AI review findings, and learned coding style patterns. Always format your responses clearly in Markdown."
     
-    agent = create_tool_calling_agent(llm, tools, prompt)
-    agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+    agent_executor = create_react_agent(llm, tools, state_modifier=system_prompt)
     return agent_executor
