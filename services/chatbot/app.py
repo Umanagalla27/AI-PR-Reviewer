@@ -11,7 +11,40 @@ os.environ["DISABLE_DB_POOL"] = "1"
 from services.chatbot.agent import get_chatbot_agent
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 
+import asyncio
+from sqlalchemy import select
+from shared.db.session import get_db_context
+from shared.db.models import PullRequest
+
+def get_repos():
+    async def _run():
+        async with get_db_context() as db:
+            stmt = select(PullRequest.repo_full_name).distinct()
+            result = await db.execute(stmt)
+            return result.scalars().all()
+    try:
+        return asyncio.run(_run())
+    except Exception:
+        return []
+
 st.set_page_config(page_title="AI PR Reviewer - Chatbot", page_icon="🤖", layout="wide")
+
+with st.sidebar:
+    st.header("⚙️ Configuration")
+    st.markdown("Select a repository to automatically filter your queries.")
+    
+    known_repos = get_repos()
+    selected_repo = ""
+    if known_repos:
+        selected_repo = st.selectbox("Select Active Repository", [""] + known_repos)
+        
+    custom_repo = st.text_input("Or type repository manually", placeholder="owner/repo")
+    active_repo = custom_repo if custom_repo else selected_repo
+    
+    if active_repo:
+        st.success(f"Context set to: **{active_repo}**")
+    else:
+        st.info("No active repository selected. Please specify the repository in your questions.")
 
 st.title("🤖 AI PR Reviewer Chatbot")
 st.markdown("Ask me about past pull requests, AI findings, or coding styles I've learned!")
@@ -42,19 +75,23 @@ def get_clean_history(history):
     return clean
 
 # Chat input
-if prompt := st.chat_input("Ask a question about your repositories... (e.g. 'What are the recent PRs for Umanagalla27/AI-PR-Reviewer?')"):
+if prompt := st.chat_input("Ask a question about your repositories... (e.g. 'What are the recent PRs?')"):
     # Add user message to state and display
-    user_msg = HumanMessage(content=prompt)
-    st.session_state.chat_history.append(user_msg)
+    st.session_state.chat_history.append(HumanMessage(content=prompt))
     with st.chat_message("user"):
         st.markdown(prompt)
 
     # Generate response
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            # Pass only clean history without any tool calls or tool messages to prevent OpenAI 400 errors
             clean_history = get_clean_history(st.session_state.chat_history[:-1])
-            messages = clean_history + [user_msg]
+            
+            # Inject context if a repository is active
+            augmented_prompt = prompt
+            if active_repo:
+                augmented_prompt = f"System Context: The user is currently viewing the repository '{active_repo}'. Please scope your query to this repository unless the user specifies otherwise.\n\nUser Question: {prompt}"
+            
+            messages = clean_history + [HumanMessage(content=augmented_prompt)]
             
             response = st.session_state.agent_executor.invoke({"messages": messages})
             
