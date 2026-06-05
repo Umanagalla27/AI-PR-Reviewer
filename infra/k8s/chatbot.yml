@@ -18,7 +18,8 @@ spec:
       containers:
         - name: chatbot
           image: ghcr.io/umanagalla27/ai-pr-reviewer:main
-          command: ["streamlit", "run", "services/chatbot/app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
+          imagePullPolicy: Always
+          command: ["python", "-m", "streamlit", "run", "services/chatbot/app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
           ports:
             - containerPort: 8501
           envFrom:
