@@ -17,7 +17,7 @@ async def run_chat_agent(
     """
     settings = get_settings()
     llm = ChatOpenAI(
-        model=settings.OPENAI_MODEL_NAME,  # e.g. gpt-4o-mini
+        model=settings.OPENAI_MODEL,  # e.g. gpt-4o-mini
         temperature=0.2,
         api_key=settings.OPENAI_API_KEY,
     )

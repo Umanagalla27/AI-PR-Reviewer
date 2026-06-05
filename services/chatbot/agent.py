@@ -79,7 +79,7 @@ def get_chatbot_agent():
     """Initialize the LangGraph agent with our database tools."""
     settings = get_settings()
     llm = ChatOpenAI(
-        model=settings.OPENAI_MODEL_NAME,
+        model=settings.OPENAI_MODEL,
         temperature=0.2,
         api_key=settings.OPENAI_API_KEY,
     )
