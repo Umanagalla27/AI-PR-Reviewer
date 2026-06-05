@@ -112,6 +112,20 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  chatbot:
+    build:
+      context: .
+      dockerfile: services/chatbot/Dockerfile
+    ports:
+      - "8501:8501"
+    env_file: .env
+    environment:
+      SERVICE_NAME: chatbot
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
   # ── Celery Worker ─────────────────────────────────────────────────────────
 
   celery_worker:

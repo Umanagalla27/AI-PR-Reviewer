@@ -57,9 +57,11 @@ jobs:
         run: |
           IMAGE="ghcr.io/${{ github.repository_owner }}/ai-pr-reviewer:main"
           IMAGE=$(echo $IMAGE | tr '[:upper:]' '[:lower:]')
+          kubectl apply -f infra/k8s/chatbot.yml
           kubectl set image deployment/celery-worker celery-worker=$IMAGE -n codereview
           kubectl set image deployment/gateway gateway=$IMAGE -n codereview
           kubectl set image deployment/webhook webhook=$IMAGE -n codereview
           kubectl set image deployment/orchestrator orchestrator=$IMAGE -n codereview
           kubectl set image deployment/reviewer reviewer=$IMAGE -n codereview
           kubectl set image deployment/learner learner=$IMAGE -n codereview
+          kubectl set image deployment/chatbot chatbot=$IMAGE -n codereview
