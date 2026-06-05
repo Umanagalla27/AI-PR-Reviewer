@@ -34,6 +34,7 @@ async def call_llm(
             model=settings.OPENAI_MODEL,
             messages=messages,  # type: ignore
             temperature=0.1,
+            max_tokens=1024,
             response_format={"type": "json_object"},
         )
 

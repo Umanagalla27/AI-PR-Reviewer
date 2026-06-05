@@ -82,6 +82,7 @@ def get_chatbot_agent():
         "model": settings.OPENAI_MODEL,
         "temperature": 0.2,
         "api_key": settings.OPENAI_API_KEY,
+        "max_tokens": 1024,
     }
     if settings.OPENAI_API_BASE:
         llm_kwargs["base_url"] = settings.OPENAI_API_BASE
