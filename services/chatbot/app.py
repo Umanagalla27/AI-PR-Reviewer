@@ -32,6 +32,15 @@ for msg in st.session_state.chat_history:
         with st.chat_message("assistant"):
             st.markdown(msg.content)
 
+def get_clean_history(history):
+    clean = []
+    for msg in history:
+        if isinstance(msg, HumanMessage):
+            clean.append(msg)
+        elif isinstance(msg, AIMessage) and msg.content:
+            clean.append(AIMessage(content=msg.content))
+    return clean
+
 # Chat input
 if prompt := st.chat_input("Ask a question about your repositories... (e.g. 'What are the recent PRs for Umanagalla27/AI-PR-Reviewer?')"):
     # Add user message to state and display
@@ -43,13 +52,14 @@ if prompt := st.chat_input("Ask a question about your repositories... (e.g. 'Wha
     # Generate response
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            # Pass the entire chat history (including previous tool calls) to avoid OpenAI 400 errors
-            response = st.session_state.agent_executor.invoke({"messages": st.session_state.chat_history})
+            # Pass only clean history without any tool calls or tool messages to prevent OpenAI 400 errors
+            clean_history = get_clean_history(st.session_state.chat_history[:-1])
+            messages = clean_history + [user_msg]
             
-            # The entire state is now updated, overwrite chat history with the full trace
-            st.session_state.chat_history = response["messages"]
+            response = st.session_state.agent_executor.invoke({"messages": messages})
             
             # The final response is the last message's content
-            answer = st.session_state.chat_history[-1].content
+            answer = response["messages"][-1].content
             if answer:
                 st.markdown(answer)
+                st.session_state.chat_history.append(AIMessage(content=answer))
