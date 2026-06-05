@@ -78,11 +78,15 @@ def get_style_patterns(repo_full_name: str) -> List[Dict[str, Any]]:
 def get_chatbot_agent():
     """Initialize the LangGraph agent with our database tools."""
     settings = get_settings()
-    llm = ChatOpenAI(
-        model=settings.OPENAI_MODEL,
-        temperature=0.2,
-        api_key=settings.OPENAI_API_KEY,
-    )
+    llm_kwargs = {
+        "model": settings.OPENAI_MODEL,
+        "temperature": 0.2,
+        "api_key": settings.OPENAI_API_KEY,
+    }
+    if settings.OPENAI_API_BASE:
+        llm_kwargs["base_url"] = settings.OPENAI_API_BASE
+        
+    llm = ChatOpenAI(**llm_kwargs)
     
     tools = [get_recent_prs, get_pr_findings, get_style_patterns]
     

@@ -15,6 +15,7 @@ class Settings(BaseSettings):
 
     # OpenAI
     OPENAI_API_KEY: str = "sk-..."
+    OPENAI_API_BASE: str | None = None
     OPENAI_MODEL: str = "gpt-4o-mini"
 
     # GitHub App

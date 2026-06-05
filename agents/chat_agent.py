@@ -16,11 +16,15 @@ async def run_chat_agent(
     generates a helpful response from the AI Reviewer.
     """
     settings = get_settings()
-    llm = ChatOpenAI(
-        model=settings.OPENAI_MODEL,  # e.g. gpt-4o-mini
-        temperature=0.2,
-        api_key=settings.OPENAI_API_KEY,
-    )
+    llm_kwargs = {
+        "model": settings.OPENAI_MODEL,  # e.g. gpt-4o-mini
+        "temperature": 0.2,
+        "api_key": settings.OPENAI_API_KEY,
+    }
+    if settings.OPENAI_API_BASE:
+        llm_kwargs["base_url"] = settings.OPENAI_API_BASE
+        
+    llm = ChatOpenAI(**llm_kwargs)
 
     messages = [
         SystemMessage(content=CHAT_SYSTEM_PROMPT),

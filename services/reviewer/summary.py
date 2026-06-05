@@ -108,7 +108,10 @@ async def generate_summary(findings: list[dict]) -> str:
 
     # Try LLM-generated summary
     try:
-        client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+        client_kwargs = {"api_key": settings.OPENAI_API_KEY}
+        if settings.OPENAI_API_BASE:
+            client_kwargs["base_url"] = settings.OPENAI_API_BASE
+        client = AsyncOpenAI(**client_kwargs)
 
         # Prepare a compact version of findings for the prompt
         compact_findings = [
