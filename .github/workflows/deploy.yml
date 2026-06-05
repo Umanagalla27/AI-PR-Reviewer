@@ -32,6 +32,9 @@ jobs:
         uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=main
+            type=raw,value=${{ github.sha }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25 # v5
@@ -39,9 +42,7 @@ jobs:
           context: .
           file: infra/Dockerfile
           push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/ai-pr-reviewer:main
-            ghcr.io/${{ github.repository_owner }}/ai-pr-reviewer:${{ github.sha }}
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Configure AWS Credentials
