@@ -5,6 +5,9 @@ import os
 # Ensure the root directory is in the sys.path so we can import shared modules
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
+# Disable DB pooling for Streamlit to prevent "Future attached to different loop" errors
+os.environ["DISABLE_DB_POOL"] = "1"
+
 from services.chatbot.agent import get_chatbot_agent
 from langchain_core.messages import HumanMessage, AIMessage
 

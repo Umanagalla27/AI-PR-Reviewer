@@ -3,15 +3,21 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from shared.config.settings import settings
 import contextlib
 
+import os
+from sqlalchemy.pool import NullPool
+
 # Configure engine args dynamically based on DB type
 engine_kwargs: dict[str, Any] = {"pool_pre_ping": True, "echo": False}
 if not settings.DATABASE_URL.startswith("sqlite"):
-    engine_kwargs.update(
-        {
-            "pool_size": 5,
-            "max_overflow": 15,  # pool_size + max_overflow = 20 (max_size=20)
-        }
-    )
+    if os.environ.get("DISABLE_DB_POOL") == "1":
+        engine_kwargs["poolclass"] = NullPool
+    else:
+        engine_kwargs.update(
+            {
+                "pool_size": 5,
+                "max_overflow": 15,  # pool_size + max_overflow = 20 (max_size=20)
+            }
+        )
 
 # Create async engine with connection pooling config
 engine = create_async_engine(settings.DATABASE_URL, **engine_kwargs)
