@@ -9,8 +9,10 @@ from shared.config.settings import get_settings
 from shared.db.models import PullRequest, Finding, StylePattern
 from shared.db.session import get_db_context
 
+import json
+
 @tool
-def get_recent_prs(repo_full_name: str, limit: int = 5) -> List[Dict[str, Any]]:
+def get_recent_prs(repo_full_name: str, limit: int = 5) -> str:
     """Fetch the most recent Pull Requests for a given repository."""
     async def _run():
         async with get_db_context() as db:
@@ -19,7 +21,7 @@ def get_recent_prs(repo_full_name: str, limit: int = 5) -> List[Dict[str, Any]]:
             ).order_by(PullRequest.created_at.desc()).limit(limit)
             result = await db.execute(stmt)
             prs = result.scalars().all()
-            return [
+            res = [
                 {
                     "pr_number": pr.pr_number,
                     "status": pr.status.value,
@@ -27,10 +29,11 @@ def get_recent_prs(repo_full_name: str, limit: int = 5) -> List[Dict[str, Any]]:
                     "created_at": pr.created_at.isoformat()
                 } for pr in prs
             ]
+            return json.dumps(res) if res else "[]"
     return asyncio.run(_run())
 
 @tool
-def get_pr_findings(repo_full_name: str, pr_number: int) -> List[Dict[str, Any]]:
+def get_pr_findings(repo_full_name: str, pr_number: int) -> str:
     """Fetch all AI review findings for a specific Pull Request."""
     async def _run():
         async with get_db_context() as db:
@@ -43,9 +46,9 @@ def get_pr_findings(repo_full_name: str, pr_number: int) -> List[Dict[str, Any]]
             pr = result.scalar_one_or_none()
             
             if not pr:
-                return [{"error": f"PR {pr_number} not found in repository {repo_full_name}"}]
+                return json.dumps([{"error": f"PR {pr_number} not found in repository {repo_full_name}"}])
                 
-            return [
+            res = [
                 {
                     "file": f.file_path,
                     "line": f.line_number,
@@ -54,10 +57,11 @@ def get_pr_findings(repo_full_name: str, pr_number: int) -> List[Dict[str, Any]]
                     "suggestion": f.suggestion
                 } for f in pr.findings
             ]
+            return json.dumps(res) if res else "[]"
     return asyncio.run(_run())
 
 @tool
-def get_style_patterns(repo_full_name: str) -> List[Dict[str, Any]]:
+def get_style_patterns(repo_full_name: str) -> str:
     """Fetch the code style patterns the AI has learned for a repository."""
     async def _run():
         async with get_db_context() as db:
@@ -66,13 +70,14 @@ def get_style_patterns(repo_full_name: str) -> List[Dict[str, Any]]:
             ).order_by(StylePattern.frequency.desc()).limit(20)
             result = await db.execute(stmt)
             patterns = result.scalars().all()
-            return [
+            res = [
                 {
                     "pattern_type": p.pattern_type,
                     "description": p.description,
                     "frequency": p.frequency
                 } for p in patterns
             ]
+            return json.dumps(res) if res else "[]"
     return asyncio.run(_run())
 
 def get_chatbot_agent():
