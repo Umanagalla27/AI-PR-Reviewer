@@ -10,10 +10,10 @@ langfuse = Langfuse(
     host=settings.LANGFUSE_HOST,
 )
 
-client_kwargs = {"api_key": settings.OPENAI_API_KEY}
-if settings.OPENAI_API_BASE:
-    client_kwargs["base_url"] = settings.OPENAI_API_BASE
-client = AsyncOpenAI(**client_kwargs)
+client = AsyncOpenAI(
+    api_key=settings.OPENAI_API_KEY,
+    base_url=settings.OPENAI_API_BASE if settings.OPENAI_API_BASE else None,
+)
 
 
 async def call_llm(

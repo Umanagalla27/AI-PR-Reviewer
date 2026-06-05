@@ -16,18 +16,16 @@ async def run_chat_agent(
     generates a helpful response from the AI Reviewer.
     """
     settings = get_settings()
-    llm_kwargs = {
-        "model": settings.OPENAI_MODEL,  # e.g. gpt-4o-mini
-        "temperature": 0.2,
-        "api_key": settings.OPENAI_API_KEY,
-        "max_tokens": 1024,
-    }
-    if settings.OPENAI_API_BASE:
-        llm_kwargs["base_url"] = settings.OPENAI_API_BASE
-        
-    llm = ChatOpenAI(**llm_kwargs)
+    llm = ChatOpenAI(
+        model=settings.OPENAI_MODEL,
+        temperature=0.2,
+        api_key=settings.OPENAI_API_KEY, # type: ignore
+        max_tokens=1024,
+        base_url=settings.OPENAI_API_BASE if settings.OPENAI_API_BASE else None, # type: ignore
+    )
 
-    messages = [
+    from langchain_core.messages import BaseMessage
+    messages: list[BaseMessage] = [
         SystemMessage(content=CHAT_SYSTEM_PROMPT),
     ]
 
@@ -52,7 +50,7 @@ async def run_chat_agent(
     
     try:
         response = await llm.ainvoke(messages)
-        return response.content
+        return str(response.content)
     except Exception as e:
         logger.error("chat_agent_failed", error=str(e))
         return "I encountered an error trying to process your request. Please try again later."

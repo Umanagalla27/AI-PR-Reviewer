@@ -181,11 +181,11 @@ with tab_chat:
                 st.markdown(msg.content)
 
     # Chat input
-    if prompt := st.chat_input("Ask a question about your repositories... (e.g. 'What are the recent PRs?')"):
+    if chat_prompt := st.chat_input("Ask a question about your repositories... (e.g. 'What are the recent PRs?')"):
         # Add user message to state and display
-        st.session_state.chat_history.append(HumanMessage(content=prompt))
+        st.session_state.chat_history.append(HumanMessage(content=chat_prompt))
         with st.chat_message("user"):
-            st.markdown(prompt)
+            st.markdown(chat_prompt)
 
         # Generate response
         with st.chat_message("assistant"):
@@ -193,9 +193,9 @@ with tab_chat:
                 clean_history = get_clean_history(st.session_state.chat_history[:-1])
                 
                 # Inject context if a repository is active
-                augmented_prompt = prompt
+                augmented_prompt = chat_prompt
                 if active_repo:
-                    augmented_prompt = f"System Context: The user is currently viewing the repository '{active_repo}'. Please scope your query to this repository unless the user specifies otherwise.\n\nUser Question: {prompt}"
+                    augmented_prompt = f"System Context: The user is currently viewing the repository '{active_repo}'. Please scope your query to this repository unless the user specifies otherwise.\n\nUser Question: {chat_prompt}"
                 
                 messages = clean_history + [HumanMessage(content=augmented_prompt)]
                 

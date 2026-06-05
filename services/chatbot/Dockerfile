@@ -23,6 +23,11 @@ COPY services/chatbot/ services/chatbot/
 # Expose port
 EXPOSE 8501
 
+# Add a non-root user
+RUN useradd -m -u 1000 appuser && \
+    chown -R appuser:appuser /app
+USER appuser
+
 # Health check
 HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health || exit 1
 
