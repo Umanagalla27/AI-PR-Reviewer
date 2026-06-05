@@ -9,6 +9,7 @@ data:
   CELERY_BROKER_URL: "redis://redis:6379/1"
   CELERY_RESULT_BACKEND: "redis://redis:6379/2"
   OPENAI_MODEL: "gpt-4o-mini"
+  OPENAI_API_BASE: "https://openrouter.ai/api/v1"
   WEBHOOK_SERVICE_URL: "http://webhook:8001"
   ORCHESTRATOR_URL: "http://orchestrator:8002"
   REVIEWER_URL: "http://reviewer:8003"
