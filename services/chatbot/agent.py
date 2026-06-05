@@ -88,5 +88,5 @@ def get_chatbot_agent():
     
     system_prompt = "You are the AI-PR-Reviewer Chatbot. You can help users query their database for past pull requests, AI review findings, and learned coding style patterns. Always format your responses clearly in Markdown."
     
-    agent_executor = create_react_agent(llm, tools, state_modifier=system_prompt)
+    agent_executor = create_react_agent(llm, tools, prompt=system_prompt)
     return agent_executor
