@@ -18,25 +18,12 @@
 
 The **AI-PR-Reviewer** is an advanced DevOps tool designed to integrate directly into your GitHub workflow. Upon receiving a webhook event for a newly opened or updated Pull Request, the system dispatches a multi-agent AI pipeline (orchestrated via **LangGraph**) to analyze code diffs, cross-reference learned coding styles, and generate human-readable feedback.
 
-The system also includes a modern, real-time **Streamlit Web Dashboard** where developers can track PR processing, view live notifications, and ask an AI agent to automatically generate fixes for any code errors discovered during the review.
-
----
-
-## ✨ Key Features
-
-- **📡 Instant Webhooks:** Real-time event ingestion from GitHub via FastAPI.
-- **⚙️ Asynchronous Task Queue:** Reliable job processing using Celery & Redis.
-- **🧠 Multi-Agent Orchestration:** LangGraph state machine directing dedicated AI workers (Reviewer, Learner, Orchestrator).
-- **📊 Real-Time Dashboard:** A gorgeous Streamlit UI with live-polling, Toast notifications, and PR metric tables.
-- **🛠️ AI Fix Center:** Select any PR with errors, and automatically generate a step-by-step resolution tutorial via the Chatbot.
-- **🚢 Enterprise Deployment:** Fully containerized and deployed to Kubernetes with automated CI/CD using GitHub Actions.
-
 ---
 
 ## 🏗️ Architecture
 
 ```mermaid
-graph TD;
+graph TD
     A[GitHub Webhook] -->|PR Opened/Sync| B(FastAPI Webhook Service)
     B -->|Enqueues Task| C(Redis Queue)
     C -->|Consumed by| D(Celery Worker)
@@ -45,43 +32,97 @@ graph TD;
     E -->|Route: Learn| G[Learner Agent]
     F -->|Saves Findings| H[(PostgreSQL Database)]
     G -->|Extracts Patterns| H
-    I[Streamlit UI] <-->|Queries & Real-Time Polling| H
-    I <-->|Interactive Fixes| J(Langchain Conversational Agent)
+    I[Streamlit UI] -->|Queries & Real-Time Polling| H
+    H -->|Live PR Data| I
+    I -->|Interactive Fixes| J(Langchain Conversational Agent)
+    J -->|Provides Steps| I
 ```
 
 ---
 
 ## 🚀 Complete Implementation Journey
 
-Below is the detailed chronological roadmap followed to design, build, and deploy this pipeline from scratch:
+Below is the detailed chronological roadmap followed to design, build, and deploy this pipeline from scratch, including key code implementations:
 
 ### **Phase 1: Foundation & Database Layer**
 1. **Repository Initialization:** Set up a monorepo structure with `pyproject.toml`, adopting Hatchling for package management and Ruff for linting.
-2. **Database Modeling:** Integrated `SQLAlchemy` with async `asyncpg` drivers. Designed the core tables: `PullRequest`, `FileDiff`, `Finding`, and `ReviewRecord`.
-3. **Alembic Migrations:** Configured database version control. Generated the initial migration schema to safely manage structural database evolution over time.
+2. **Database Modeling:** Integrated `SQLAlchemy` with async `asyncpg` drivers. 
+```python
+# shared/db/models.py
+class PullRequest(Base):
+    __tablename__ = "pull_requests"
+    id = Column(Integer, primary_key=True)
+    pr_number = Column(Integer, nullable=False)
+    repo_full_name = Column(String, nullable=False)
+    status = Column(Enum(PRStatus), default=PRStatus.PENDING)
+```
 
 ### **Phase 2: Event Ingestion & Task Queue**
-4. **FastAPI Webhook Service:** Built a lightweight, highly responsive REST API endpoint (`POST /webhook`) to securely catch incoming GitHub payloads using X-Hub-Signature validation.
-5. **Celery Worker Integration:** Configured `Celery` to run asynchronously with a `Redis` message broker. This ensures the Webhook service immediately returns a `200 OK` to GitHub while heavy AI workloads run securely in the background.
+3. **FastAPI Webhook Service:** Built a lightweight, highly responsive REST API endpoint.
+```python
+# services/webhook/main.py
+@app.post("/webhook")
+async def github_webhook(request: Request, background_tasks: BackgroundTasks):
+    payload = await request.json()
+    action = payload.get("action")
+    if action in ["opened", "synchronize"]:
+        # Dispatch Celery background task instantly
+        process_pr_task.delay(payload)
+    return {"status": "accepted"}
+```
+4. **Celery Worker Integration:** Configured `Celery` to run asynchronously with a `Redis` message broker.
 
 ### **Phase 3: Multi-Agent AI Orchestration (LangGraph)**
-6. **State Machine Design:** Defined a strict `TypedDict` state object holding PR context, diff data, routing flags, and review findings.
-7. **Orchestrator Node:** Implemented a LangGraph entry point to analyze the PR size/impact and route execution dynamically to the Reviewer, Learner, or both.
-8. **Reviewer Node:** Built a specialized prompt using `Langchain` and `OpenAI GPT-4o-mini`. The agent systematically parses Git diffs, enforces best practices, and outputs structured JSON containing severe issues and suggestions.
-9. **Database Persistence Node:** A finalizing node to gracefully write the generated `Finding` and `ReviewRecord` entities back into the PostgreSQL schema.
+5. **State Machine Design:** Defined a strict `TypedDict` state object holding PR context.
+```python
+# agents/orchestrator/graph.py
+class AgentState(TypedDict):
+    pr_id: int
+    diff_content: str
+    findings: List[dict]
+
+workflow = StateGraph(AgentState)
+workflow.add_node("reviewer", review_code_node)
+workflow.add_node("learner", extract_patterns_node)
+```
+6. **Reviewer Node:** Built a specialized prompt using `Langchain` and `OpenAI GPT-4o-mini`. 
+7. **Database Persistence Node:** A finalizing node to gracefully write the generated `Finding` and `ReviewRecord` entities back into the PostgreSQL schema.
 
 ### **Phase 4: Cloud Infrastructure & Deployment**
-10. **Containerization:** Wrote highly optimized `Dockerfile`s utilizing `python:3.11-slim` for all microservices (Webhook, Celery Worker, Chatbot).
-11. **Kubernetes Manifests:** Designed a robust K8s architecture:
-    - **Deployments:** Configured replicas, environment secrets, and ConfigMaps for PostgreSQL/Redis connectivity.
-    - **LoadBalancers:** Exposed the Webhook Service to the internet (for GitHub) and the Streamlit UI (for developers).
-12. **CI/CD Automation:** Authored a `.github/workflows/deploy.yml` pipeline that triggers on `main` branch pushes. It builds Docker images via Docker Buildx, publishes to GHCR, and performs zero-downtime rolling updates using `kubectl rollout restart`.
+8. **Containerization:** Wrote highly optimized `Dockerfile`s for microservices.
+9. **Kubernetes Manifests:** Designed a robust K8s architecture exposing the Streamlit LoadBalancer.
+```yaml
+# infra/k8s/chatbot.yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: chatbot-svc
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 8501
+      targetPort: 8501
+```
 
 ### **Phase 5: User Interface Overhaul (Streamlit)**
-13. **Dashboard Tab:** Implemented a live-updating data grid displaying recent Pull Requests, leveraging `streamlit-autorefresh` to query the database seamlessly without user intervention.
-14. **Notifications:** Engineered a stateful tracker (`last_seen_pr_time`) to trigger beautiful Streamlit `st.toast` notifications the exact moment the DB registers a new PR from GitHub.
-15. **Fix Center Tab:** Created an interactive troubleshooting space. Users select a PR with known errors, view detailed alerts, and execute a button that dynamically invokes the Chatbot Agent to generate bespoke fix tutorials.
-16. **Context Injection:** Upgraded the AI Chatbot's system prompt to transparently inject the currently selected repository name, drastically simplifying the user query experience.
+10. **Dashboard Tab:** Implemented a live-updating data grid.
+```python
+# services/chatbot/app.py
+from streamlit_autorefresh import st_autorefresh
+
+# Run auto-refresh every 10 seconds
+count = st_autorefresh(interval=10000, limit=None, key="pr_autorefresh")
+recent_prs = get_recent_prs(active_repo)
+st.dataframe(recent_prs)
+```
+11. **Notifications:** Engineered a stateful tracker (`last_seen_pr_time`) to trigger `st.toast` notifications for new PRs.
+12. **Fix Center Tab:** Created an interactive troubleshooting space utilizing the Chatbot LLM.
+```python
+if st.button("🤖 Generate AI Fix Instructions"):
+    prompt = f"Provide a step-by-step guide to fix these findings: {findings_data}"
+    response = st.session_state.agent_executor.invoke({"messages": [HumanMessage(content=prompt)]})
+    st.markdown(response["messages"][-1].content)
+```
 
 ---
 
