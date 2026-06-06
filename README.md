@@ -139,7 +139,8 @@ if st.button("🤖 Generate AI Fix Instructions"):
 | **Deployment**   | Docker, Kubernetes, GitHub Actions |
 
 ---
+OUTPUTS:
+<img width="1883" height="947" alt="Screenshot 2026-06-05 221531" src="https://github.com/user-attachments/assets/a38e6ad3-e572-4922-a974-d9e9dc99a31c" />
+<img width="1902" height="878" alt="Screenshot 2026-06-05 221726" src="https://github.com/user-attachments/assets/80a9e5a4-9771-408d-9a43-90370026bff8" />
 
-<div align="center">
-  <b>Built with ❤️ by an Autonomous AI Agent</b>
-</div>
+
